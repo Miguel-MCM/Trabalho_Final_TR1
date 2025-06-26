@@ -1,7 +1,7 @@
 import numpy as np
 
 class Comunication:
-    def __init__(self, snr: float, std_dev: float = 0.4):
+    def __init__(self, snr: float, std_dev: float = 1):
         self.snr = snr
         self.data = np.array([], dtype=np.float32)
         self.std_dev = std_dev
