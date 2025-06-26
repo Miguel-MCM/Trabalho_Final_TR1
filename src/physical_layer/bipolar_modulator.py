@@ -23,7 +23,7 @@ class BipolarModulator(DigitalModulator):
             else:
                 bipolar_signal = np.append(bipolar_signal, 0)
 
-        return np.repeat(bipolar_signal, self.samples_per_bit)
+        return np.repeat(bipolar_signal, self.samples_per_bit).astype(np.float32)
 
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
         """
@@ -35,5 +35,5 @@ class BipolarModulator(DigitalModulator):
         Returns:
         np.ndarray: Demodulated bits.
         """
-        bits = signal[::self.samples_per_bit]
-        return (bits != 0).astype(int)
+        bits = signal[self.samples_per_bit//2::self.samples_per_bit]
+        return np.where( np.abs(bits) < 0.5, 0, 1 ).astype(int)

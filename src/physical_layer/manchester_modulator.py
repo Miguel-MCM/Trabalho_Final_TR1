@@ -21,7 +21,7 @@ class ManchesterModulator(DigitalModulator):
             else:
                 manchester_signal = np.append(manchester_signal, [1, 0])
         
-        return np.repeat(manchester_signal, self.samples_per_bit//2)
+        return np.repeat(manchester_signal, self.samples_per_bit//2).astype(np.float32)
     
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
         """
@@ -33,6 +33,6 @@ class ManchesterModulator(DigitalModulator):
         Returns:
         np.ndarray: Demodulated bits.
         """
-        bits = signal[::self.samples_per_bit]
-        return bits.astype(int)
+        bits = signal[self.samples_per_bit//4::self.samples_per_bit]
+        return np.where( bits - 0.5 < 0, 0, 1 ) .astype(int)
         

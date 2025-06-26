@@ -15,7 +15,7 @@ class NRZModulator(DigitalModulator):
         """
         bits = np.where(bits == 0, -1, 1)
         signal = np.repeat(bits, self.samples_per_bit)
-        return signal
+        return signal.astype(np.float32)
 
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
         """
@@ -27,5 +27,5 @@ class NRZModulator(DigitalModulator):
         Returns:
         np.ndarray: Demodulated bits.
         """
-        bits = signal[::self.samples_per_bit]
+        bits = signal[self.samples_per_bit//2::self.samples_per_bit]
         return (bits > 0).astype(int)  # Convert to binary representation
