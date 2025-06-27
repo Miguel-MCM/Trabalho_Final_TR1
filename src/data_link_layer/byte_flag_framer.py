@@ -60,26 +60,36 @@ class ByteFlagFramer(Framer):
         bytes_data = self.bits_to_uint8(framed_data)
         
         # Remove flag bytes
-        if bytes_data[0] != self.flag_byte or bytes_data[-1] != self.flag_byte:
-            raise ValueError("Invalid frame: missing flag bytes.")
+        if bytes_data.size < 2:
+            raise ValueError("Invalid frame: too small.")
         
-        bytes_data = bytes_data[1:-1]  # Exclude the flag bytes
+        #bytes_data = bytes_data[1:-1]  # Exclude the flag bytes
 
         # Remove escape bytes that follow escape or flag bytes
-        deframed = np.zeros(bytes_data.shape[0])
+        deframed = np.zeros(bytes_data.size - 2)
 
+        initialized = False
+        finished = False
         was_escape = False
         counter = 0
         for i, byte in enumerate(bytes_data):
+            if not initialized:
+                if byte == self.flag_byte:
+                    initialized = True
+                continue
             if not was_escape:
                 if byte == self.escape_byte:
-                    counter += 1
                     was_escape = True
                     continue
                 if byte == self.flag_byte:
-                    deframed = deframed[:i-1]
+                    finished = True
+                    deframed = deframed[:counter]
                     break
-            deframed[i-counter] = byte
+            deframed[counter] = byte
+            counter += 1
             was_escape = False
         
-        return self.uint8_to_bits(deframed[:-counter] if counter != 0 else deframed)
+        if not finished or not initialized:
+            raise ValueError("Framed data does not include flags.")
+        
+        return self.uint8_to_bits(deframed)
