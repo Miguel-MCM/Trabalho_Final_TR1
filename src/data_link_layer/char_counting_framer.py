@@ -10,6 +10,9 @@ class CharCountingFramer(Framer):
         
         Parameters:
         counter_size (int): Size of the character count field in bytes.
+        error_detector (ErrorDetector | None): An optional error detector instance
+                                               used to add/check trailers during
+                                               framing and deframing.
         """
 
         if error_detector is not None and error_detector.trailer_size % 8 != 0:

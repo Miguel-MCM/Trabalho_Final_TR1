@@ -10,6 +10,9 @@ class BitsFlagFramer(Framer):
         
         Parameters:
         flag_bits (np.ndarray): Bits used as a flag to indicate frame boundaries.
+        error_detector (ErrorDetector | None): An optional error detector instance
+                                               used to add/check trailers during
+                                               framing and deframing.
         """
         super().__init__(error_detector)
         if not isinstance(flag_bits, np.ndarray):

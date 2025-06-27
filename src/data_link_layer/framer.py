@@ -7,6 +7,14 @@ class Framer:
     This class defines the interface for framing tecniques.
     It includes methods for framing and deframing bit sequences."""
     def __init__(self, error_detector:ErrorDetector|None = None):
+        """
+        Initialize the framer with an optional error detector.
+        
+        Parameters:
+        error_detector (ErrorDetector | None): An optional error detector instance
+                                               used to add/check trailers during
+                                               framing and deframing.
+        """
         self.error_detector = error_detector
 
     @abstractmethod

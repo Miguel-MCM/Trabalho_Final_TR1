@@ -8,6 +8,13 @@ class ParityErrorDetector(ErrorDetector):
     XOR-based parity checking to detect single-bit errors.
     """
     def __init__(self, to_byte = False) -> None:
+        """
+        Initialize the parity detector.
+        
+        Parameters:
+        to_byte (bool): If True, the parity trailer will be 8 bits (a full byte).
+                        If False, the trailer will be a single bit.
+        """
         super().__init__()
         self.to_byte = to_byte
         self.trailer_size = 8 if to_byte else 1

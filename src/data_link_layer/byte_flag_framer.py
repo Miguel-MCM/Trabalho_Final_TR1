@@ -11,6 +11,9 @@ class ByteFlagFramer(Framer):
         Parameters:
         flag_byte (int): Byte used as a flag to indicate frame boundaries.
         escape_byte (int): Byte used as escape flag to indicate that the next byte of data is not a flag
+        error_detector (ErrorDetector | None): An optional error detector instance
+                                               used to add/check trailers during
+                                               framing and deframing.
         """
         if not (0 <= flag_byte <= 255 ):
             raise ValueError("Flag byte must be between 0 and 255.")
@@ -40,7 +43,7 @@ class ByteFlagFramer(Framer):
             raise ValueError("Data must be a numpy array.")
         
         bytes_data = self.bits_to_uint8(data)
-        
+
         if self.error_detector is not None:
             bits_data = self.uint8_to_bits(bytes_data)
             bits_data = self.error_detector.add_trailer(bits_data)
