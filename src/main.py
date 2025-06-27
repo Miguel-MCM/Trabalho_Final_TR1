@@ -16,11 +16,12 @@ if __name__ == "__main__":
 
     bits = CharCountingFramer.uint8_to_bits(bytes)
 
-    error_detector = ParityErrorDetector(to_byte=True)
+    error_detector = None
+    #error_detector = ParityErrorDetector(to_byte=True)
 
-    #framer = CharCountingFramer(counter_size=1, error_detector=error_detector)
+    framer = CharCountingFramer(counter_size=1, error_detector=error_detector)
     #framer = ByteFlagFramer(error_detector=error_detector)
-    framer = BitsFlagFramer(error_detector=error_detector)
+    #framer = BitsFlagFramer(error_detector=error_detector)
 
     framed_bits = framer.frame_data(bits)
 
@@ -39,7 +40,7 @@ if __name__ == "__main__":
 
     from communication import Comunication
     # Create a communication channel with a specified SNR
-    comm_channel = Comunication(snr=10)
+    comm_channel = Comunication(snr=4)
     comm_channel.send(modulated_signal)
 
     received = comm_channel.receive()
@@ -48,7 +49,11 @@ if __name__ == "__main__":
     #demodulated_received_bit[2] = 0
     #demodulated_received_bit[-10] = 0
 
-    deframed_received_bits = framer.deframe_data(demodulated_received_bit)
+    try:
+        deframed_received_bits = framer.deframe_data(demodulated_received_bit)
+    except ValueError as e:
+        print("Error: ",e)
+        deframed_received_bits = None
 
     # Print results
     print("Original Bytes: ", bytes)
@@ -57,7 +62,7 @@ if __name__ == "__main__":
     print("Framed Bits: ", framed_bits)
     print("Demodulated Received Bits: ", demodulated_received_bit)
     print("Deframed Received Bits: ", deframed_received_bits)
-    print("Deframed Received Bytes: ", framer.bits_to_uint8(deframed_received_bits))
+    print("Deframed Received Bytes: ", framer.bits_to_uint8(deframed_received_bits) if deframed_received_bits is not None else None)
 
 
     plt.plot(np.linspace(0, len(received) / modulator.sample_rate, num=len(received)), received, color='red', )
