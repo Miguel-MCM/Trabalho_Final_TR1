@@ -63,6 +63,8 @@ class CharCountingFramer(Framer):
         bytes = self.bits_to_uint8(framed_data)
         # Extract character count and bits
         char_count = bytes[0]
+        if char_count > bytes.size - 1:
+            bytes.resize(char_count+1)
         deframed = bytes[1:1 + char_count]
 
         deframed_bits = self.uint8_to_bits(deframed)
