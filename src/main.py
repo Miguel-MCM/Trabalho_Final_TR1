@@ -3,24 +3,30 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
+    from data_link_layer.parity_error_detector import ParityErrorDetector
+
+
     from data_link_layer.char_counting_framer import CharCountingFramer
     from data_link_layer.byte_flag_framer import ByteFlagFramer
     from data_link_layer.bits_flag_framer import BitsFlagFramer
 
-    # Generate a random sequence of bits
-    bytes = np.random.randint(0, 256, size=7)
-    bytes = np.array([126, 1, 126 ,126])
+    # Generate a random sequence of bits    
+    bytes = np.random.randint(0, 256, size=2)
+    #bytes = np.array([126, 1, 125 ,126])
+
     bits = CharCountingFramer.uint8_to_bits(bytes)
 
-    #framer = CharCountingFramer(counter_size=1)
-    #framer = ByteFlagFramer()
-    framer = BitsFlagFramer()
+    error_detector = ParityErrorDetector(to_byte=True)
+
+    #framer = CharCountingFramer(counter_size=1, error_detector=error_detector)
+    #framer = ByteFlagFramer(error_detector=error_detector)
+    framer = BitsFlagFramer(error_detector=error_detector)
 
     framed_bits = framer.frame_data(bits)
 
     # Example usage of the NRZ modulator
-    #from physical_layer.nrz_modulator import NRZModulator
-    #from physical_layer.manchester_modulator import ManchesterModulator
+    from physical_layer.nrz_modulator import NRZModulator
+    from physical_layer.manchester_modulator import ManchesterModulator
     from physical_layer.bipolar_modulator import BipolarModulator
 
     # Create an instance of the NRZ modulator
@@ -39,6 +45,8 @@ if __name__ == "__main__":
     received = comm_channel.receive()
 
     demodulated_received_bit = modulator.demodulate(received)
+    #demodulated_received_bit[2] = 0
+    #demodulated_received_bit[-10] = 0
 
     deframed_received_bits = framer.deframe_data(demodulated_received_bit)
 

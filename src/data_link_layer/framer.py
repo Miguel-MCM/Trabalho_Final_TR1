@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
 import numpy as np
+from .error_detector import ErrorDetector
 
 class Framer:
     """Abstract base class for data framers.
     This class defines the interface for framing tecniques.
     It includes methods for framing and deframing bit sequences."""
+    def __init__(self, error_detector:ErrorDetector|None = None):
+        self.error_detector = error_detector
 
     @abstractmethod
     def frame_data(self, data: np.ndarray) -> np.ndarray:

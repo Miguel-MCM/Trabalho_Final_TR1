@@ -1,16 +1,21 @@
-from .framer import Framer
+from .framer import Framer, ErrorDetector
 import numpy as np
 
 class CharCountingFramer(Framer):
     """Character Counting Framer for encapsulating data into frames with character count."""
 
-    def __init__(self, counter_size: int = 1):
+    def __init__(self, counter_size: int = 1, error_detector:ErrorDetector|None = None):
         """
         Initialize the CharCountingFramer with a specified counter size.
         
         Parameters:
         counter_size (int): Size of the character count field in bytes.
         """
+
+        if error_detector is not None and error_detector.trailer_size % 8 != 0:
+            raise ValueError("Error detector trailer size must be a multiple of 8.") 
+
+        super().__init__(error_detector)
         if counter_size <= 0:
             raise ValueError("Counter size must be a positive integer.")
         self.counter_size = counter_size
@@ -31,8 +36,14 @@ class CharCountingFramer(Framer):
         # Convert data to bits
         bytes = self.bits_to_uint8(data)
         
+        if self.error_detector is not None:
+            bits = self.uint8_to_bits(bytes)
+            bits = self.error_detector.add_trailer(bits)
+            bytes = self.bits_to_uint8(bits)
+
         # Create frame with character count
-        frame = np.concatenate(([len(bytes)], bytes))
+        frame = np.concatenate(([bytes.size], bytes))
+        
         
         return self.uint8_to_bits(frame)
 
@@ -53,5 +64,11 @@ class CharCountingFramer(Framer):
         # Extract character count and bits
         char_count = bytes[0]
         deframed = bytes[1:1 + char_count]
-        
-        return self.uint8_to_bits(deframed)
+
+        deframed_bits = self.uint8_to_bits(deframed)
+        if self.error_detector is not None:
+            if  (error := self.error_detector.check(deframed_bits)):
+                raise ValueError(error)
+            deframed_bits = self.error_detector.remove_trailer(deframed_bits)
+
+        return deframed_bits
