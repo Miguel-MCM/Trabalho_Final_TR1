@@ -10,6 +10,7 @@ class ByteFlagFramer(Framer):
         
         Parameters:
         flag_byte (int): Byte used as a flag to indicate frame boundaries.
+        escape_byte (int): Byte used as escape flag to indicate that the next byte of data is not a flag
         """
         if not (0 <= flag_byte <= 255 ):
             raise ValueError("Flag byte must be between 0 and 255.")
@@ -22,7 +23,7 @@ class ByteFlagFramer(Framer):
 
     def frame_data(self, data: np.ndarray) -> np.ndarray:
         """
-        Frame the input data into fixed-size frames with byte flags.
+        Frame the input data into frames with byte flags.
         
         Parameters:
         data (np.ndarray): Input bits to be framed.

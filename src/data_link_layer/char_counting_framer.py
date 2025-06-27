@@ -17,7 +17,7 @@ class CharCountingFramer(Framer):
 
     def frame_data(self, data: np.ndarray) -> np.ndarray:
         """
-        Frame the input data into fixed-size frames with character count.
+        Frame the input data into frames with character count.
         
         Parameters:
         data (np.ndarray): Input bits to be framed.

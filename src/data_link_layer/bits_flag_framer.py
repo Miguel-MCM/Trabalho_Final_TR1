@@ -6,10 +6,10 @@ class BitsFlagFramer(Framer):
 
     def __init__(self, flag_bits: np.ndarray = np.array([0, 1, 1, 1, 1, 1, 1, 0])):
         """
-        Initialize the BitsFlagFramer with a specified flag bit.
+        Initialize the BitsFlagFramer with a specified flag bits.
         
         Parameters:
-        flag_bit (int): Bit used as a flag to indicate frame boundaries.
+        flag_bits (np.ndarray): Bits used as a flag to indicate frame boundaries.
         """
         if not isinstance(flag_bits, np.ndarray):
             raise ValueError("Flag bits must be a np.ndarray.")

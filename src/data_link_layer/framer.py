@@ -2,12 +2,14 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 class Framer:
-    """Framer for encapsulating data into frames."""
+    """Abstract base class for data framers.
+    This class defines the interface for framing tecniques.
+    It includes methods for framing and deframing bit sequences."""
 
     @abstractmethod
     def frame_data(self, data: np.ndarray) -> np.ndarray:
         """
-        Frame the input data into fixed-size frames.
+        Frame the input data into frames.
         
         Parameters:
         data (np.ndarray): Input data to be framed.
