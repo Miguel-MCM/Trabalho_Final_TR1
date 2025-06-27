@@ -3,6 +3,21 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
+    from data_link_layer.char_counting_framer import CharCountingFramer
+    from data_link_layer.byte_flag_framer import ByteFlagFramer
+    from data_link_layer.bits_flag_framer import BitsFlagFramer
+
+    # Generate a random sequence of bits
+    bytes = np.random.randint(0, 256, size=7)
+    bytes = np.array([126, 1, 126 ,126])
+    bits = CharCountingFramer.uint8_to_bits(bytes)
+
+    #framer = CharCountingFramer(counter_size=1)
+    #framer = ByteFlagFramer()
+    framer = BitsFlagFramer()
+
+    framed_bits = framer.frame_data(bits)
+
     # Example usage of the NRZ modulator
     #from physical_layer.nrz_modulator import NRZModulator
     #from physical_layer.manchester_modulator import ManchesterModulator
@@ -13,30 +28,28 @@ if __name__ == "__main__":
     #modulator = ManchesterModulator(bit_rate=1e6, sample_rate=10e8)
     modulator = BipolarModulator(bit_rate=1e6, sample_rate=10e8)
 
-    # Generate a random sequence of bits
-    bits = np.random.randint(0, 2, size=10)
-
     # Modulate the bits
-    modulated_signal = modulator.modulate(bits)
+    modulated_signal = modulator.modulate(framed_bits)
 
     from communication import Comunication
     # Create a communication channel with a specified SNR
-    comm_channel = Comunication(snr=2)
+    comm_channel = Comunication(snr=10)
     comm_channel.send(modulated_signal)
 
     received = comm_channel.receive()
 
-    # Demodulate the signal back to bits
-    demodulated_bits = modulator.demodulate(modulated_signal)
-
     demodulated_received_bit = modulator.demodulate(received)
 
+    deframed_received_bits = framer.deframe_data(demodulated_received_bit)
+
     # Print results
+    print("Original Bytes: ", bytes)
     print("Original Bits: ", bits)
-    print("Modulated Signal: ", modulated_signal)
-    print("Demodulated Bits: ", demodulated_bits)
-    print("Received Signal: ", received)
+    #print("Framed Bytes: ", framer.bits_to_uint8(framed_bits))
+    print("Framed Bits: ", framed_bits)
     print("Demodulated Received Bits: ", demodulated_received_bit)
+    print("Deframed Received Bits: ", deframed_received_bits)
+    print("Deframed Received Bytes: ", framer.bits_to_uint8(deframed_received_bits))
 
 
     plt.plot(np.linspace(0, len(received) / modulator.sample_rate, num=len(received)), received, color='red', )

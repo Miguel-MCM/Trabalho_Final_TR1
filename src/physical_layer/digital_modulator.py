@@ -37,28 +37,3 @@ class DigitalModulator:
         """
         pass
 
-    def uint8_to_bits(self, data: np.ndarray) -> np.ndarray:
-        """
-        Convert an array of uint8 values to a bit sequence.
-        
-        Parameters:
-        data (np.ndarray): Array of uint8 values.
-        
-        Returns:
-        np.ndarray: Bit sequence.
-        """
-        return np.unpackbits(data.astype(np.uint8))
-    
-    def bits_to_uint8(self, bits: np.ndarray) -> np.ndarray:
-        """
-        Convert a bit sequence to an array of uint8 values.
-        
-        Parameters:
-        bits (np.ndarray): Bit sequence.
-        
-        Returns:
-        np.ndarray: Array of uint8 values.
-        """
-        if len(bits) % 8 != 0:
-            raise ValueError("Bit sequence length must be a multiple of 8.")
-        return np.packbits(bits.reshape(-1, 8))
