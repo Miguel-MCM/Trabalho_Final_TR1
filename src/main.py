@@ -4,20 +4,21 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     from data_link_layer.parity_error_detector import ParityErrorDetector
-
+    from data_link_layer.crc_error_detector import CRCErrorDetector
 
     from data_link_layer.char_counting_framer import CharCountingFramer
     from data_link_layer.byte_flag_framer import ByteFlagFramer
     from data_link_layer.bits_flag_framer import BitsFlagFramer
 
     # Generate a random sequence of bits    
-    bytes = np.random.randint(0, 256, size=2)
+    bytes = np.random.randint(0, 256, size=4)
     #bytes = np.array([126, 1, 125 ,126])
 
     bits = CharCountingFramer.uint8_to_bits(bytes)
 
-    error_detector = None
+    #error_detector = None
     #error_detector = ParityErrorDetector(to_byte=True)
+    error_detector = CRCErrorDetector()
 
     framer = CharCountingFramer(counter_size=1, error_detector=error_detector)
     #framer = ByteFlagFramer(error_detector=error_detector)
@@ -31,16 +32,16 @@ if __name__ == "__main__":
     from physical_layer.bipolar_modulator import BipolarModulator
 
     # Create an instance of the NRZ modulator
-    #modulator = NRZModulator(bit_rate=1e6, sample_rate=10e8)
+    modulator = NRZModulator(bit_rate=1e6, sample_rate=10e8)
     #modulator = ManchesterModulator(bit_rate=1e6, sample_rate=10e8)
-    modulator = BipolarModulator(bit_rate=1e6, sample_rate=10e8)
+    #modulator = BipolarModulator(bit_rate=1e6, sample_rate=10e8)
 
     # Modulate the bits
     modulated_signal = modulator.modulate(framed_bits)
 
     from communication import Comunication
     # Create a communication channel with a specified SNR
-    comm_channel = Comunication(snr=4)
+    comm_channel = Comunication(snr=2)
     comm_channel.send(modulated_signal)
 
     received = comm_channel.receive()
