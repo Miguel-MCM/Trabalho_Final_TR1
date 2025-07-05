@@ -215,3 +215,67 @@ box {
   padding: 0;
   color: #ffffff;
 }
+
+/* Physical Page Styles */
+.physical_page {
+  background-color: #2d2d2d;
+  color: #ffffff;
+}
+
+.physical_page grid {
+  background-color: transparent;
+}
+
+.physical_page box {
+  background-color: transparent;
+}
+
+/* Graph Frame Styles */
+graph_frame {
+  background-color: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+graph_frame canvas {
+  background-color: #2b2b2b;
+}
+
+graph_frame toolbar {
+  background-color: #3c3c3c;
+  border: 1px solid #555555;
+  border-radius: 3px;
+  margin-bottom: 5px;
+}
+
+graph_frame toolbar button {
+  background-color: #3c3c3c;
+  color: #ffffff;
+  border: 1px solid #555555;
+  border-radius: 3px;
+  padding: 3px 6px;
+  margin: 1px;
+}
+
+graph_frame toolbar button:hover {
+  background-color: #4a4a4a;
+}
+
+graph_frame toolbar button:active {
+  background-color: #3a3a3a;
+}
+
+/* Dark Canvas Styles */
+.dark_canvas {
+  background-color: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 3px;
+}
+
+.dark_canvas * {
+  background-color: #2b2b2b;
+}
+
+
+

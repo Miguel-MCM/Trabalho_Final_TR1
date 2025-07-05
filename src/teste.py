@@ -4,11 +4,11 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk # type:ignore
 
 import numpy as np
-from gui.graph_frame import GraphFrame
 from gui.config_page import ConfigPage
 from gui.base_window import BaseWindow
 from gui.aplication_frame import AplicationFrame
 from gui.link_page import LinkPage
+from gui.physical_page import PhysicalPage
 
 class Window(BaseWindow, Gtk.ApplicationWindow):
     def __init__(self, app):
@@ -61,8 +61,8 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         notebook.append_page(self.link_page, Gtk.Label(label="Enlace"))
 
         # 3. Segmento Físico
-        physical_page = self.create_physical_page()
-        notebook.append_page(physical_page, Gtk.Label(label="Física"))
+        self.physical_page = PhysicalPage((self.size[0] - 32, self.size[1] - 32))
+        notebook.append_page(self.physical_page, Gtk.Label(label="Física"))
 
     def process_data_through_layers(self, input_text: str) -> dict:
         """Processa dados através de todas as camadas usando os objetos configurados"""
@@ -162,39 +162,6 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         if result['modulated_signal'] is not None:
             self.update_physical_graphs(result)
 
-    def update_physical_graphs(self, result: dict):
-        """Atualiza os gráficos da camada física"""
-        # Gerar dados de tempo
-        t = np.linspace(0, 1, 1000)
-        
-        # Sinal original (bits)
-        bits = result['final_link_data'].replace(' ', '')
-        signal_original = np.array([int(bit) for bit in bits])
-        # Repetir o sinal para preencher o tempo
-        signal_original = np.tile(signal_original, len(t) // len(signal_original) + 1)[:len(t)]
-        self.graph1.update(t, signal_original)
-        
-        # Sinal modulado
-        if result['modulated_signal'] is not None:
-            modulated_t = np.linspace(0, len(result['modulated_signal']) / self.sample_rate, len(result['modulated_signal']))
-            self.graph2.update(modulated_t, result['modulated_signal'])
-            
-            # Espectro de frequência
-            f = np.linspace(0, self.sample_rate/2, 500)
-            spectrum = np.abs(np.fft.fft(result['modulated_signal']))
-            # Garantir que o espectro tenha o mesmo tamanho que f
-            if len(spectrum) > len(f):
-                spectrum = spectrum[:len(f)]
-            elif len(spectrum) < len(f):
-                # Preencher com zeros se necessário
-                spectrum = np.pad(spectrum, (0, len(f) - len(spectrum)), 'constant')
-            self.graph3.update(f, spectrum)
-        
-        # Sinal demodulado
-        if result['demodulated_signal'] is not None:
-            demodulated_t = np.linspace(0, len(result['demodulated_signal']) / self.sample_rate, len(result['demodulated_signal']))
-            self.graph4.update(demodulated_t, result['demodulated_signal'])
-
     def apply_dark_theme(self):
         """Aplica o tema escuro à aplicação"""
         
@@ -209,54 +176,16 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
             )
 
-    def create_physical_page(self):
-        """Cria a página física com 4 gráficos usando GraphFrame"""
-        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        page.set_margin_start(10)
-        page.set_margin_end(10)
-        page.set_margin_top(10)
-        page.set_margin_bottom(10)
-
-        # Título
-        title = Gtk.Label(label="Camada Física")
-        title.set_markup("<span size='large' weight='bold'>Camada Física</span>")
-        page.append(title)
-
-        # Grid 2x2 para os 4 gráficos
-        grid = Gtk.Grid()
-        grid.set_row_spacing(10)
-        grid.set_column_spacing(10)
-        page.append(grid)
-
-        # Gráfico 1: Sinal Original
-        self.graph1 = GraphFrame("Sinal Original", "Tempo (s)", "Amplitude", (self.size[0]//2 - 20, self.size[1]//2 - 20))
-        grid.attach(self.graph1, 0, 0, 1, 1)
-
-        # Gráfico 2: Sinal Modulado
-        self.graph2 = GraphFrame("Sinal Modulado", "Tempo (s)", "Amplitude", (self.size[0]//2 - 20, self.size[1]//2 - 20))
-        grid.attach(self.graph2, 1, 0, 1, 1)
-
-        # Gráfico 3: Espectro de Frequência
-        self.graph3 = GraphFrame("Espectro de Frequência", "Frequência (Hz)", "Magnitude", (self.size[0]//2 - 20, self.size[1]//2 - 20))
-        grid.attach(self.graph3, 0, 1, 1, 1)
-
-        # Gráfico 4: Sinal Demodulado
-        self.graph4 = GraphFrame("Sinal Demodulado", "Tempo (s)", "Amplitude", (self.size[0]//2 - 20, self.size[1]//2 - 20))
-        grid.attach(self.graph4, 1, 1, 1, 1)
-
-        # Botão para atualizar gráficos
-        update_button = Gtk.Button(label="Atualizar Gráficos")
-        update_button.connect("clicked", self.on_update_graphs)
-        page.append(update_button)
-
-        return page
-
     def on_process_text(self, button):
         """Callback para processar texto"""
         # Obter texto de entrada
         bits = ''.join(format(ord(char), '08b') for char in self.input_text)
         print(bits)
         self.link_page.set_data_input(bits)
+
+        modulated_signal = self.modulator.modulate(np.array([int(bit) for bit in bits]))
+        x = np.linspace(0, len(modulated_signal) / self.modulator.sample_rate, num=len(modulated_signal))
+        self.physical_page.update_encoder_graph(x, modulated_signal)
 
 
     def on_update_graphs(self, button):
