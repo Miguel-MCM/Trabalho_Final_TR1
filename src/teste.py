@@ -7,6 +7,7 @@ import numpy as np
 from gui.graph_frame import GraphFrame
 from gui.config_page import ConfigPage
 from gui.base_window import BaseWindow
+from gui.aplication_frame import AplicationFrame
 
 class Window(BaseWindow, Gtk.ApplicationWindow):
     def __init__(self, app):
@@ -26,7 +27,7 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         self.set_child(main_vbox)
 
         # Criar seção de entrada/saída sempre visível
-        self.create_always_visible_section(main_vbox)
+        main_vbox.append(AplicationFrame(on_process_text=self.on_process_text, set_variables={ "input_text": self.set_input_text }))
 
         # Notebook para organizar os 4 segmentos
         notebook = Gtk.Notebook()
@@ -44,7 +45,7 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         }
 
         config_page = ConfigPage(
-            (self.size[0]//2, self.size[1]//2),
+            (self.size[0] - 32, self.size[1] - 32),
             coding_options=self.coding_options_names,
             error_detection_options=self.error_detection_options_names,
             modulation_options=self.modulation_options_names,
@@ -61,74 +62,6 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         # 3. Segmento Físico
         physical_page = self.create_physical_page()
         notebook.append_page(physical_page, Gtk.Label(label="Física"))
-
-    def create_always_visible_section(self, parent):
-        """Cria a seção de entrada/saída sempre visível na parte superior"""
-        # Frame para a seção sempre visível
-        always_visible_frame = Gtk.Frame()
-        always_visible_frame.set_margin_start(10)
-        always_visible_frame.set_margin_end(10)
-        always_visible_frame.set_margin_top(10)
-        always_visible_frame.set_margin_bottom(10)
-        parent.append(always_visible_frame)
-
-        # Container vertical para organizar entrada e saída
-        section_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        always_visible_frame.set_child(section_vbox)
-
-        # Container horizontal para entrada e saída
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-        section_vbox.append(hbox)
-
-        # Lado esquerdo - Entrada
-        input_frame = Gtk.Frame(label="Entrada")
-        input_vbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        input_frame.set_child(input_vbox)
-
-        # Entrada de texto
-        input_vbox.append(Gtk.Label(label="Texto:"))
-        self.input_text = Gtk.TextView()
-        self.input_text.set_size_request(200, 24)
-        self.input_text.set_hexpand(True)
-        input_vbox.append(self.input_text)
-
-        # Bits de entrada (readonly)
-        input_vbox.append(Gtk.Label(label="Bits:"))
-        self.input_bits = Gtk.TextView()
-        self.input_bits.set_size_request(200, 24)
-        self.input_bits.set_hexpand(True)
-        self.input_bits.set_editable(False)
-        input_vbox.append(self.input_bits)
-
-        hbox.append(input_frame)
-
-        # Botão de processar
-        process_button = Gtk.Button(label="Processar →")
-        process_button.connect("clicked", self.on_process_text)
-        hbox.append(process_button)
-
-        # Lado direito - Saída
-        output_frame = Gtk.Frame(label="Saída")
-        output_vbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        output_frame.set_child(output_vbox)
-
-        # Saída de texto
-        output_vbox.append(Gtk.Label(label="Texto:"))
-        self.output_text = Gtk.TextView()
-        self.output_text.set_size_request(200, 24)
-        self.output_text.set_hexpand(True)
-        self.output_text.set_editable(False)
-        output_vbox.append(self.output_text)
-
-        # Bits de saída (readonly)
-        output_vbox.append(Gtk.Label(label="Bits:"))
-        self.output_bits = Gtk.TextView()
-        self.output_bits.set_size_request(200, 24)
-        self.output_bits.set_hexpand(True)
-        self.output_bits.set_editable(False)
-        output_vbox.append(self.output_bits)
-
-        hbox.append(output_frame)
 
     def process_data_through_layers(self, input_text: str) -> dict:
         """Processa dados através de todas as camadas usando os objetos configurados"""
@@ -274,8 +207,6 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
                 css_provider,
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
             )
-
-
 
     def create_link_page(self):
         """Cria a página de enlace com 4 saídas de texto em formato de bits"""

@@ -2,10 +2,10 @@
   background-color: #2d2d2d;
   color: #ffffff;
 
-
+/*
   border: 1px dashed  red;
+*/
 }
-
 
 label {
   color: #ffffff;
@@ -81,30 +81,6 @@ dropdown:hover {
 dropdown:active {
   background-color: #3a3a3a;
 }
-button {
-  background-color: #3c3c3c;
-  color: #ffffff;
-  border: 1px solid #555555;
-  border-radius: 3px;
-  padding: 5px;
-};
-
-button * {
-  background: transparent;
-  border: none;
-  outline: none;
-  box-shadow: none;
-  margin: 0;
-  color: #ffffff;
-}
-
-button:hover {
-  background-color: #5a5a5a;
-}
-
-button:active {
-  background-color: #3a3a3a;
-}
 
 textview {
   background-color: #3c3c3c;
@@ -118,6 +94,40 @@ frame {
   border-radius: 3px;
 }
 
+frame.aplication_frame {
+  padding: 5px;
+}
+
+frame.aplication_frame button {
+  background-color: #3c3c3c;
+  outline: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+frame.aplication_frame button label:hover {
+  background-color: #4a4a4a;
+}
+
+frame.aplication_frame button label:active {
+  background-color: #3a3a3a;
+}
+
+frame.aplication_frame button * {
+  background-color: #3c3c3c;
+  color: #ffffff;
+  border: 1px solid #555555;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+frame.aplication_frame frame {
+  padding: 5px;
+}
+
+
 notebook {
   background-color: #2d2d2d;
 }
@@ -128,6 +138,16 @@ notebook tab {
   border: 1px solid #555555;
   border-radius: 3px 3px 0 0;
   padding: 8px 16px;
+}
+
+notebook tab * {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
 }
 
 notebook tab:checked {

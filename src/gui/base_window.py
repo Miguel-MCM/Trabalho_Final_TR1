@@ -4,6 +4,8 @@ from communication import CommunicationChannel
 
 class BaseWindow:
     def __init__(self):
+        self.input_text = ""
+
         self.coding = None
         self.error_detector = None
         self.modulator = NRZModulator(bit_rate=1000, sample_rate=10000)
@@ -51,6 +53,9 @@ class BaseWindow:
 
     def _create_set_functions(self):
         """Cria as funções set para atualizar configurações"""
+        def set_input_text(x: str):
+            self.input_text = x
+
         def set_max_frame_size(x: str):
             self.max_frame_size = int(x)
             self._update_coding()
@@ -87,7 +92,8 @@ class BaseWindow:
         self.set_bit_rate = set_bit_rate
         self.set_sample_rate = set_sample_rate
         self.set_snr = set_snr
-        
+        self.set_input_text = set_input_text
+
     def _create_update_functions(self):
         """Cria as funções update para recriar objetos baseados nas configurações"""
         def update_coding():
