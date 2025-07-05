@@ -18,7 +18,14 @@ class GraphFrame(Gtk.Box):
         self.set_hexpand(False)
         self.set_vexpand(False)
         
-        # Calcular figsize baseado no tamanho fornecido
+        # Container com tamanho absoluto
+        container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        container.set_size_request(size[0], size[1])
+        container.set_hexpand(False)
+        container.set_vexpand(False)
+        container.set_css_classes(["fixed_graph_container"])
+        
+        # Calcular figsize com proporção fixa baseada no tamanho fornecido
         width_inches = size[0] / 100  # Converter pixels para polegadas
         height_inches = size[1] / 100
         
@@ -41,6 +48,9 @@ class GraphFrame(Gtk.Box):
         # Configurar grade
         self.ax.grid(True, color='#404040', alpha=0.3)
         
+        # Configurar proporção fixa para evitar distorção
+        self.ax.set_aspect('auto', adjustable='box')
+        
         self.line, = self.ax.plot([], [], color='#00ff00', linewidth=1.5)  # Linha verde para contraste
         if title:
             self.ax.set_title(title, color='#ffffff', fontsize=10)
@@ -58,8 +68,12 @@ class GraphFrame(Gtk.Box):
         self.toolbar = NavigationToolbar(self.canvas)
         self.toolbar.set_hexpand(True)
 
-        self.append(self.toolbar)
-        self.append(self.canvas)
+        # Adicionar toolbar e canvas ao container
+        container.append(self.toolbar)
+        container.append(self.canvas)
+        
+        # Adicionar container ao frame principal
+        self.append(container)
 
         self.xdata = np.array([])
         self.ydata = np.array([])
@@ -69,6 +83,8 @@ class GraphFrame(Gtk.Box):
         self.ydata = y
         self.line.set_xdata(self.xdata)
         self.line.set_ydata(self.ydata)
-        self.ax.relim();
+        self.ax.relim()
         self.ax.autoscale_view()
+        # Manter proporção após atualização
+        self.ax.set_aspect('auto', adjustable='box')
         self.canvas.draw()

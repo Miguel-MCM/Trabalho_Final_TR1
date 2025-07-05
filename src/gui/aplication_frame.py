@@ -35,7 +35,7 @@ class AplicationFrame(Gtk.Frame):
         self.input_text = Gtk.TextView()
         self.input_text.set_size_request(200, 24) 
         self.input_text.set_hexpand(True)
-        self.input_text.set_vexpand(True)  # Permitir expansão vertical
+        self.input_text.set_vexpand(True)  # Impedir expansão vertical
         self.input_text.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)  # Habilitar quebra de texto
         self.input_text.set_name("input_text")
         self.input_text.get_buffer().connect('changed', lambda *_: self.update_input_text())
@@ -47,7 +47,7 @@ class AplicationFrame(Gtk.Frame):
         self.input_bits = Gtk.TextView()
         self.input_bits.set_size_request(200, 24)
         self.input_bits.set_hexpand(True)
-        self.input_bits.set_vexpand(True)  # Permitir expansão vertical
+        self.input_bits.set_vexpand(True)  # Impedir expansão vertical
         self.input_bits.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)  # Habilitar quebra de texto
         self.input_bits.set_editable(False)
         input_vbox.append(self.input_bits)
@@ -70,6 +70,7 @@ class AplicationFrame(Gtk.Frame):
         self.output_text = Gtk.TextView()
         self.output_text.set_size_request(200, 24)
         self.output_text.set_hexpand(True)
+        self.output_text.set_vexpand(True)  # Impedir expansão vertical
         self.output_text.set_editable(False)
         output_vbox.append(self.output_text)
 
@@ -77,7 +78,9 @@ class AplicationFrame(Gtk.Frame):
         output_vbox.append(Gtk.Label(label="Bytes:"))
         self.output_bits = Gtk.TextView()
         self.output_bits.set_size_request(200, 24)
+        
         self.output_bits.set_hexpand(True)
+        self.output_bits.set_vexpand(True)  # Impedir expansão vertical
         self.output_bits.set_editable(False)
         output_vbox.append(self.output_bits)
 

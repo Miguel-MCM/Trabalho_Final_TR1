@@ -24,6 +24,12 @@ class PhysicalPage(Gtk.Box):
         title.set_markup("<span size='large' weight='bold'>Camada Física</span>")
         self.append(title)
 
+        # Container principal para os gráficos
+        main_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        main_container.set_hexpand(True)
+        main_container.set_vexpand(True)
+        self.append(main_container)
+
         # Grid 2x2 para os 4 gráficos
         grid = Gtk.Grid()
         grid.set_row_spacing(10)
@@ -33,11 +39,11 @@ class PhysicalPage(Gtk.Box):
         # Configurar o grid para não expandir os widgets
         grid.set_column_homogeneous(True)
         grid.set_row_homogeneous(True)
-        self.append(grid)
+        main_container.append(grid)
 
-        # Calcular tamanho dos gráficos (maior)
-        graph_width = (self.size[0] - 40) // 2
-        graph_height = (self.size[1] - 100) // 2  # Subtrair espaço para título
+        # Tamanho fixo dos gráficos
+        graph_width = size[0]//2  # Tamanho fixo em pixels
+        graph_height = size[1]//2  # Tamanho fixo em pixels
 
         # Gráfico 1: Codificador Banda Base
         self.graph1 = GraphFrame(
@@ -46,6 +52,8 @@ class PhysicalPage(Gtk.Box):
             xlabel="Tempo (s)",
             ylabel="Amplitude"
         )
+        self.graph1.set_size_request(graph_width, graph_height)
+        self.graph1.set_hexpand(False)
         grid.attach(self.graph1, 0, 0, 1, 1)
 
         # Gráfico 2: Modulador
@@ -55,7 +63,9 @@ class PhysicalPage(Gtk.Box):
             xlabel="Tempo (s)",
             ylabel="Amplitude"
         )
-        grid.attach(self.graph2, 1, 0, 1, 1)
+        self.graph2.set_size_request(graph_width, graph_height) 
+        self.graph2.set_hexpand(False)
+        grid.attach(self.graph2, 0, 1, 1, 1)
 
         # Gráfico 3: Demodulador
         self.graph3 = GraphFrame(
@@ -64,7 +74,9 @@ class PhysicalPage(Gtk.Box):
             xlabel="Tempo (s)",
             ylabel="Amplitude"
         )
-        grid.attach(self.graph3, 0, 1, 1, 1)
+        self.graph3.set_size_request(graph_width, graph_height)
+        self.graph3.set_hexpand(False)
+        grid.attach(self.graph3, 1, 1, 1, 1)
 
         # Gráfico 4: Decodificador Banda Base
         self.graph4 = GraphFrame(
@@ -73,7 +85,9 @@ class PhysicalPage(Gtk.Box):
             xlabel="Tempo (s)",
             ylabel="Amplitude"
         )
-        grid.attach(self.graph4, 1, 1, 1, 1)
+        self.graph4.set_size_request(graph_width, graph_height)
+        self.graph4.set_hexpand(False)
+        grid.attach(self.graph4, 1, 0, 1, 1)
 
     def update_encoder_graph(self, x:np.ndarray, y:np.ndarray):
         self.graph1.update(x, y)

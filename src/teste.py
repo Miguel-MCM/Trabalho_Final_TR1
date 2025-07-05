@@ -5,10 +5,11 @@ from gi.repository import Gtk, Gdk # type:ignore
 
 import numpy as np
 from gui.config_page import ConfigPage
-from gui.base_window import BaseWindow
 from gui.aplication_frame import AplicationFrame
 from gui.link_page import LinkPage
 from gui.physical_page import PhysicalPage
+
+from base_window import BaseWindow
 
 class Window(BaseWindow, Gtk.ApplicationWindow):
     def __init__(self, app):
@@ -64,103 +65,7 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         self.physical_page = PhysicalPage((self.size[0] - 32, self.size[1] - 32))
         notebook.append_page(self.physical_page, Gtk.Label(label="Física"))
 
-    def process_data_through_layers(self, input_text: str) -> dict:
-        """Processa dados através de todas as camadas usando os objetos configurados"""
-        result = {
-            'input_text': input_text,
-            'input_bits': '',
-            'coded_data': '',
-            'error_detection_data': '',
-            'flow_control_data': '',
-            'final_link_data': '',
-            'modulated_signal': None,
-            'demodulated_signal': None
-        }
-        
-        # Camada de Aplicação: Converter texto para bits
-        input_bits = ''.join(format(ord(char), '08b') for char in input_text)
-        result['input_bits'] = ' '.join(input_bits[i:i+8] for i in range(0, len(input_bits), 8))
-        
-        # Converter string de bits para numpy array
-        bits_array = np.array([int(bit) for bit in input_bits])
-        
-        # Camada de Enlace: Codificação
-        if self.coding is not None:
-            try:
-                coded_data = self.coding.frame_data(bits_array)
-                # Converter de volta para string formatada
-                coded_bits = ''.join(str(bit) for bit in coded_data)
-                result['coded_data'] = ' '.join(coded_bits[i:i+8] for i in range(0, len(coded_bits), 8))
-            except Exception as e:
-                print(f"Erro na codificação: {e}")
-                result['coded_data'] = result['input_bits']
-        else:
-            result['coded_data'] = result['input_bits']
-        
-        # Camada de Enlace: Detecção de Erro
-        if self.error_detector is not None:
-            try:
-                # Converter dados codificados para numpy array
-                coded_bits = result['coded_data'].replace(' ', '')
-                coded_array = np.array([int(bit) for bit in coded_bits])
-                
-                if hasattr(self.error_detector, 'add_trailer'):
-                    error_data = self.error_detector.add_trailer(coded_array)
-                    error_bits = ''.join(str(bit) for bit in error_data)
-                    result['error_detection_data'] = ' '.join(error_bits[i:i+8] for i in range(0, len(error_bits), 8))
-                else:
-                    result['error_detection_data'] = result['coded_data']
-            except Exception as e:
-                print(f"Erro na detecção de erro: {e}")
-                result['error_detection_data'] = result['coded_data']
-        else:
-            result['error_detection_data'] = result['coded_data']
-        
-        # Camada de Enlace: Controle de Fluxo (simulado)
-        result['flow_control_data'] = result['error_detection_data']
-        
-        # Camada de Enlace: Dados Finais
-        result['final_link_data'] = result['flow_control_data']
-        
-        # Camada Física: Modulação
-        if self.modulator is not None:
-            try:
-                # Converter bits para array numpy para modulação
-                final_bits = result['final_link_data'].replace(' ', '')
-                bits_array = np.array([int(bit) for bit in final_bits])
-                modulated_signal = self.modulator.modulate(bits_array)
-                result['modulated_signal'] = modulated_signal
-                
-                # Simular demodulação
-                result['demodulated_signal'] = self.modulator.demodulate(modulated_signal)
-            except Exception as e:
-                print(f"Erro na modulação: {e}")
-        
-        return result
-
-    def update_all_displays(self, result: dict):
-        """Atualiza todos os displays com os dados processados"""
-        # Atualizar camada de aplicação
-        input_bits_buffer = self.input_bits.get_buffer()
-        input_bits_buffer.set_text(result['input_bits'])
-        
-        output_text_buffer = self.output_text.get_buffer()
-        output_text_buffer.set_text(result['input_text'])  # Por enquanto, saída = entrada
-        
-        output_bits_buffer = self.output_bits.get_buffer()
-        output_bits_buffer.set_text(result['input_bits'])
-        
-
-        
-        # Atualizar camada de enlace
-        self.link_output1.get_buffer().set_text(result['coded_data'])
-        self.link_output2.get_buffer().set_text(result['error_detection_data'])
-        self.link_output3.get_buffer().set_text(result['flow_control_data'])
-        self.link_output4.get_buffer().set_text(result['final_link_data'])
-        
-        # Atualizar gráficos da camada física
-        if result['modulated_signal'] is not None:
-            self.update_physical_graphs(result)
+        notebook.set_current_page(1)
 
     def apply_dark_theme(self):
         """Aplica o tema escuro à aplicação"""
@@ -178,32 +83,16 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
 
     def on_process_text(self, button):
         """Callback para processar texto"""
-        # Obter texto de entrada
-        bits = ''.join(format(ord(char), '08b') for char in self.input_text)
+        bits = ''.join(format(ord(char), '08b') for char in self.input_text[:self.max_frame_size])
         print(bits)
+
         self.link_page.set_data_input(bits)
+        self.process_frame(np.array([int(bit) for bit in bits]))
 
-        modulated_signal = self.modulator.modulate(np.array([int(bit) for bit in bits]))
-        x = np.linspace(0, len(modulated_signal) / self.modulator.sample_rate, num=len(modulated_signal))
-        self.physical_page.update_encoder_graph(x, modulated_signal)
-
-
-    def on_update_graphs(self, button):
-        """Callback para atualizar gráficos"""
-        # Obter texto de entrada atual
-        text_buffer = self.input_text.get_buffer()
-        start, end = text_buffer.get_bounds()
-        input_text = text_buffer.get_text(start, end, True)
-        
-        if not input_text.strip():
-            # Se não há texto, usar dados de exemplo
-            input_text = "Hello World"
-        
-        # Processar dados através de todas as camadas
-        result = self.process_data_through_layers(input_text)
-        
-        # Atualizar gráficos da camada física
-        self.update_physical_graphs(result)
+    def process_frame(self, bits:np.ndarray):
+        encoded_bits = self.modulator.modulate(bits)
+        x = np.linspace(0, len(encoded_bits) / self.sample_rate, num=len(encoded_bits))
+        self.physical_page.update_encoder_graph(x, encoded_bits)
 
 class App(Gtk.Application):
     def __init__(self):
