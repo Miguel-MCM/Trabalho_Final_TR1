@@ -78,19 +78,19 @@ class ConfigPage(Gtk.Box):
         self.error_detection_combo.set_hexpand(True)
         grid.attach(self.error_detection_combo, 1, 2, 1, 1)
 
-        # SRN
-        srn_label = Gtk.Label(label="SRN:")
-        srn_label.set_hexpand(True)
-        srn_label.set_halign(Gtk.Align.START)
-        grid.attach(srn_label, 0, 3, 1, 1)
+        # SNR
+        snr_label = Gtk.Label(label="SNR:")
+        snr_label.set_hexpand(True)
+        snr_label.set_halign(Gtk.Align.START)
+        grid.attach(snr_label, 0, 3, 1, 1)
         
-        self.srn_entry = Gtk.Entry()
-        self.srn_entry.set_name("srn")
-        self.srn_entry.set_text("1000")
-        id_set_v = self.srn_entry.connect_after('changed', lambda *_: self.set_variable(self.srn_entry, self.srn_entry.get_text))
-        self.srn_entry.connect('changed', self.check_numeric_entry, [id_set_v], True)
-        self.srn_entry.set_hexpand(True)
-        grid.attach(self.srn_entry, 1, 3, 1, 1)
+        self.snr_entry = Gtk.Entry()
+        self.snr_entry.set_name("snr")
+        self.snr_entry.set_text("10")
+        id_set_v = self.snr_entry.connect_after('changed', lambda *_: self.set_variable(self.snr_entry, self.snr_entry.get_text))
+        self.snr_entry.connect('changed', self.check_numeric_entry, [id_set_v], True)
+        self.snr_entry.set_hexpand(True)
+        grid.attach(self.snr_entry, 1, 3, 1, 1)
 
         # Digital Modulation Config
         dg_title = Gtk.Label(label="Configurações de Modulação Digital")

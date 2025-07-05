@@ -2,9 +2,8 @@
   background-color: #2d2d2d;
   color: #ffffff;
 
-  /*
+
   border: 1px dashed  red;
-*/
 }
 
 
@@ -35,6 +34,14 @@ entry * {
   box-shadow: none;
   margin: 5px;
   color: #ffffff;
+}
+
+entry:hover {
+  background-color: #4a4a4a;
+}
+
+entry:active {
+  background-color: #3a3a3a;
 }
 
 dropdown {

@@ -1,6 +1,6 @@
 import numpy as np
 
-class Comunication:
+class CommunicationChannel:
     def __init__(self, snr: float, std_dev: float = 1):
         self.snr = snr
         self.data = np.array([], dtype=np.float32)

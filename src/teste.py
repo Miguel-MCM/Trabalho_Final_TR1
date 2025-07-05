@@ -6,18 +6,16 @@ from gi.repository import Gtk, Gdk # type:ignore
 import numpy as np
 from gui.graph_frame import GraphFrame
 from gui.config_page import ConfigPage
+from gui.base_window import BaseWindow
 
-from physical_layer import BipolarModulator, ManchesterModulator, NRZModulator
-from data_link_layer import ByteFlagFramer, BitsFlagFramer, CharCountingFramer
-from data_link_layer.parity_error_detector import ParityErrorDetector
-from data_link_layer.crc_error_detector import CRCErrorDetector
-
-
-
-class PlotWindow(Gtk.ApplicationWindow):
+class Window(BaseWindow, Gtk.ApplicationWindow):
     def __init__(self, app):
-        super().__init__(application=app, title="Sistema de Comunicação")
-        self.size = (1080, 720)
+        # Inicializar BaseWindow primeiro
+        BaseWindow.__init__(self)
+        # Inicializar Gtk.ApplicationWindow
+        Gtk.ApplicationWindow.__init__(self, application=app, title="Sistema de Comunicação")
+        
+        self.size = (720, 480)
         self.set_default_size(*self.size)
 
         # Aplicar modo escuro
@@ -27,19 +25,12 @@ class PlotWindow(Gtk.ApplicationWindow):
         main_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.set_child(main_vbox)
 
+        # Criar seção de entrada/saída sempre visível
+        self.create_always_visible_section(main_vbox)
+
         # Notebook para organizar os 4 segmentos
         notebook = Gtk.Notebook()
         main_vbox.append(notebook)
-
-        # Inicializar configurações
-        self._init_configurations()
-        
-        # Criar funções de configuração
-        self._create_set_functions()
-        self._create_update_functions()
-        
-        # Configurar objetos baseados nas configurações
-        self._setup_objects()
 
         # 1. Segmento de Configurações
         config_page_variables = {
@@ -49,123 +40,95 @@ class PlotWindow(Gtk.ApplicationWindow):
             "sample_rate": self.set_sample_rate,
             "coding": self.set_coding,
             "error_detection": self.set_error_detection,
+            "snr": self.set_snr,
         }
 
-        config_page = ConfigPage(self.size,
-        coding_options=self.coding_options_names,
-        error_detection_options=self.error_detection_options_names,
-        modulation_options=self.modulation_options_names,
-        analog_modulation_options=["FSK", "PSK", "QAM"],
-        set_variables=config_page_variables)
+        config_page = ConfigPage(
+            (self.size[0]//2, self.size[1]//2),
+            coding_options=self.coding_options_names,
+            error_detection_options=self.error_detection_options_names,
+            modulation_options=self.modulation_options_names,
+            analog_modulation_options=["FSK", "PSK", "QAM"],
+            set_variables=config_page_variables
+            )
         notebook.append_page(config_page, Gtk.Label(label="Configurações"))
 
-        # 2. Segmento de Aplicação
-        app_page = self.create_app_page()
-        notebook.append_page(app_page, Gtk.Label(label="Aplicação"))
-
-        # 3. Segmento de Enlace
+        
+        # 2. Segmento de Enlace
         link_page = self.create_link_page()
         notebook.append_page(link_page, Gtk.Label(label="Enlace"))
 
-        # 4. Segmento Físico
+        # 3. Segmento Físico
         physical_page = self.create_physical_page()
         notebook.append_page(physical_page, Gtk.Label(label="Física"))
 
-    def _init_configurations(self):
-        """Inicializa todas as configurações padrão"""
-        # Configurações de enquadramento
-        self.coding_index = 0
-        self.coding_options = [CharCountingFramer, ByteFlagFramer, BitsFlagFramer, None]
-        self.coding_options_names = ["Contagem de Caracteres", "Byte Flag", "Bits Flag", "Nenhum"]
-        self.max_frame_size = 10
-        
-        # Configurações de detecção de erro
-        self.error_detection_index = 0
-        self.error_detection_options = [ParityErrorDetector, CRCErrorDetector, None]
-        self.error_detection_options_names = ["Paridade", "CRC", "Nenhum"]
-        
-        # Configurações de modulação
-        self.modulation_index = 0
-        self.modulation_options = [BipolarModulator, ManchesterModulator, NRZModulator]
-        self.modulation_options_names = ["Bipolar", "Manchester", "NRZ"]
-        self.bit_rate = 1000
-        self.sample_rate = 10000
-        
-        # Configurações de modulação analógica
-        self.analog_modulation_index = 0
-        self.analog_modulation_options_names = ["FSK", "PSK", "QAM"]
-        self.analog_frequency = 1000
-        self.analog_sample_rate = 1000000
+    def create_always_visible_section(self, parent):
+        """Cria a seção de entrada/saída sempre visível na parte superior"""
+        # Frame para a seção sempre visível
+        always_visible_frame = Gtk.Frame()
+        always_visible_frame.set_margin_start(10)
+        always_visible_frame.set_margin_end(10)
+        always_visible_frame.set_margin_top(10)
+        always_visible_frame.set_margin_bottom(10)
+        parent.append(always_visible_frame)
 
-    def _create_set_functions(self):
-        """Cria as funções set para atualizar configurações"""
-        def set_max_frame_size(x: str):
-            self.max_frame_size = int(x)
-            self._update_coding()
-        
-        def set_coding(x: int):
-            self.coding_index = x
-            self._update_coding()
-        
-        def set_error_detection(x: int):
-            self.error_detection_index = x
-            self._update_error_detection()
-        
-        def set_modulation(x: int):
-            self.modulation_index = x
-            self._update_modulator()
-        
-        def set_bit_rate(x: str):
-            self.bit_rate = float(x)
-            self._update_modulator()
-        
-        def set_sample_rate(x: str):
-            self.sample_rate = float(x)
-            self._update_modulator()
-        
-        # Atribuir as funções como métodos da classe
-        self.set_max_frame_size = set_max_frame_size
-        self.set_coding = set_coding
-        self.set_error_detection = set_error_detection
-        self.set_modulation = set_modulation
-        self.set_bit_rate = set_bit_rate
-        self.set_sample_rate = set_sample_rate
+        # Container vertical para organizar entrada e saída
+        section_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        always_visible_frame.set_child(section_vbox)
 
-    def _create_update_functions(self):
-        """Cria as funções update para recriar objetos baseados nas configurações"""
-        def update_coding():
-            if self.coding_options[self.coding_index] is not None:
-                self.coding = self.coding_options[self.coding_index]()
-            else:
-                self.coding = None
-        
-        def update_error_detection():
-            if self.error_detection_options[self.error_detection_index] is not None:
-                self.error_detector = self.error_detection_options[self.error_detection_index]()
-            else:
-                self.error_detector = None
-        
-        def update_modulator():
-            self.modulator = self.modulation_options[self.modulation_index](
-                bit_rate=self.bit_rate, 
-                sample_rate=self.sample_rate
-            )
-        
-        # Atribuir as funções como métodos da classe
-        self._update_coding = update_coding
-        self._update_error_detection = update_error_detection
-        self._update_modulator = update_modulator
+        # Container horizontal para entrada e saída
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        section_vbox.append(hbox)
 
-    def _setup_objects(self):
-        """Configura os objetos iniciais baseados nas configurações padrão"""
-        # Configurar codificador
-        self._update_coding()
-        
-        # Configurar detector de erro
-        self._update_error_detection()
-        
-        # Configurar modulador
-        self._update_modulator()
+        # Lado esquerdo - Entrada
+        input_frame = Gtk.Frame(label="Entrada")
+        input_vbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        input_frame.set_child(input_vbox)
+
+        # Entrada de texto
+        input_vbox.append(Gtk.Label(label="Texto:"))
+        self.input_text = Gtk.TextView()
+        self.input_text.set_size_request(200, 24)
+        self.input_text.set_hexpand(True)
+        input_vbox.append(self.input_text)
+
+        # Bits de entrada (readonly)
+        input_vbox.append(Gtk.Label(label="Bits:"))
+        self.input_bits = Gtk.TextView()
+        self.input_bits.set_size_request(200, 24)
+        self.input_bits.set_hexpand(True)
+        self.input_bits.set_editable(False)
+        input_vbox.append(self.input_bits)
+
+        hbox.append(input_frame)
+
+        # Botão de processar
+        process_button = Gtk.Button(label="Processar →")
+        process_button.connect("clicked", self.on_process_text)
+        hbox.append(process_button)
+
+        # Lado direito - Saída
+        output_frame = Gtk.Frame(label="Saída")
+        output_vbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        output_frame.set_child(output_vbox)
+
+        # Saída de texto
+        output_vbox.append(Gtk.Label(label="Texto:"))
+        self.output_text = Gtk.TextView()
+        self.output_text.set_size_request(200, 24)
+        self.output_text.set_hexpand(True)
+        self.output_text.set_editable(False)
+        output_vbox.append(self.output_text)
+
+        # Bits de saída (readonly)
+        output_vbox.append(Gtk.Label(label="Bits:"))
+        self.output_bits = Gtk.TextView()
+        self.output_bits.set_size_request(200, 24)
+        self.output_bits.set_hexpand(True)
+        self.output_bits.set_editable(False)
+        output_vbox.append(self.output_bits)
+
+        hbox.append(output_frame)
 
     def process_data_through_layers(self, input_text: str) -> dict:
         """Processa dados através de todas as camadas usando os objetos configurados"""
@@ -253,6 +216,8 @@ class PlotWindow(Gtk.ApplicationWindow):
         output_bits_buffer = self.output_bits.get_buffer()
         output_bits_buffer.set_text(result['input_bits'])
         
+
+        
         # Atualizar camada de enlace
         self.link_output1.get_buffer().set_text(result['coded_data'])
         self.link_output2.get_buffer().set_text(result['error_detection_data'])
@@ -310,70 +275,7 @@ class PlotWindow(Gtk.ApplicationWindow):
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
             )
 
-    def create_app_page(self):
-        """Cria a página de aplicação com entrada/saída de texto e bits"""
-        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        page.set_margin_start(10)
-        page.set_margin_end(10)
-        page.set_margin_top(10)
-        page.set_margin_bottom(10)
 
-        # Título
-        title = Gtk.Label(label="Camada de Aplicação")
-        title.set_markup("<span size='large' weight='bold'>Camada de Aplicação</span>")
-        page.append(title)
-
-        # Container horizontal para entrada e saída
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-        page.append(hbox)
-
-        # Lado esquerdo - Entrada
-        input_frame = Gtk.Frame(label="Entrada")
-        input_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        input_frame.set_child(input_vbox)
-
-        # Entrada de texto
-        input_vbox.append(Gtk.Label(label="Texto de Entrada:"))
-        self.input_text = Gtk.TextView()
-        self.input_text.set_size_request(self.size[0]//4 - 20, self.size[1]//4 - 20)
-        input_vbox.append(self.input_text)
-
-        # Bits de entrada (readonly)
-        input_vbox.append(Gtk.Label(label="Bits de Entrada:"))
-        self.input_bits = Gtk.TextView()
-        self.input_bits.set_size_request(self.size[0]//4 - 20, self.size[1]//4 - 20)
-        self.input_bits.set_editable(False)
-        input_vbox.append(self.input_bits)
-
-        hbox.append(input_frame)
-
-        # Botão de processar
-        process_button = Gtk.Button(label="Processar →")
-        process_button.connect("clicked", self.on_process_text)
-        hbox.append(process_button)
-
-        # Lado direito - Saída
-        output_frame = Gtk.Frame(label="Saída")
-        output_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        output_frame.set_child(output_vbox)
-
-        # Saída de texto
-        output_vbox.append(Gtk.Label(label="Texto de Saída:"))
-        self.output_text = Gtk.TextView()
-        self.output_text.set_size_request(self.size[0]//4 - 20, self.size[1]//4 - 20)
-        self.output_text.set_editable(False)
-        output_vbox.append(self.output_text)
-
-        # Bits de saída (readonly)
-        output_vbox.append(Gtk.Label(label="Bits de Saída:"))
-        self.output_bits = Gtk.TextView()
-        self.output_bits.set_size_request(self.size[0]//4 - 20, self.size[1]//4 - 20)
-        self.output_bits.set_editable(False)
-        output_vbox.append(self.output_bits)
-
-        hbox.append(output_frame)
-
-        return page
 
     def create_link_page(self):
         """Cria a página de enlace com 4 saídas de texto em formato de bits"""
@@ -513,7 +415,7 @@ class App(Gtk.Application):
         super().__init__(application_id="org.example.communication")
 
     def do_activate(self):
-        win = PlotWindow(self)
+        win = Window(self)
         win.present()
 
 if __name__ == "__main__":
