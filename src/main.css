@@ -161,4 +161,57 @@ grid {
 box {
   background-color: transparent;
 }
-  
+
+/* Link Page Styles */
+
+.section_label {
+  padding: 5px 10px;
+}
+
+.input_column {
+  background-color: #2d2d2d;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #444444;
+}
+
+.output_column {
+  background-color: #2d2d2d;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #444444;
+}
+
+.input_grid {
+  background-color: transparent;
+  padding: 5px;
+}
+
+.output_grid {
+  background-color: transparent;
+  padding: 5px;
+}
+
+.link_frame {
+  padding: 5px;
+  margin: 2px;
+  border: none;
+}
+
+.link_textview {
+  background-color: #2a2a2a;
+  color: #ffffff;
+  padding: 8px;
+  font-family: 'Monospace', monospace;
+  font-size: 12px;
+}
+
+.link_textview * {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+}

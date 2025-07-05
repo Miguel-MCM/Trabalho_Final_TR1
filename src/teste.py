@@ -8,6 +8,7 @@ from gui.graph_frame import GraphFrame
 from gui.config_page import ConfigPage
 from gui.base_window import BaseWindow
 from gui.aplication_frame import AplicationFrame
+from gui.link_page import LinkPage
 
 class Window(BaseWindow, Gtk.ApplicationWindow):
     def __init__(self, app):
@@ -56,8 +57,8 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
 
         
         # 2. Segmento de Enlace
-        link_page = self.create_link_page()
-        notebook.append_page(link_page, Gtk.Label(label="Enlace"))
+        self.link_page = LinkPage((self.size[0] - 32, self.size[1] - 32))
+        notebook.append_page(self.link_page, Gtk.Label(label="Enlace"))
 
         # 3. Segmento Físico
         physical_page = self.create_physical_page()
@@ -208,67 +209,6 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
             )
 
-    def create_link_page(self):
-        """Cria a página de enlace com 4 saídas de texto em formato de bits"""
-        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        page.set_margin_start(10)
-        page.set_margin_end(10)
-        page.set_margin_top(10)
-        page.set_margin_bottom(10)
-
-        # Título
-        title = Gtk.Label(label="Camada de Enlace")
-        title.set_markup("<span size='large' weight='bold'>Camada de Enlace</span>")
-        page.append(title)
-
-        # Grid 2x2 para as 4 saídas
-        grid = Gtk.Grid()
-        grid.set_row_spacing(10)
-        grid.set_column_spacing(10)
-        page.append(grid)
-
-        # Saída 1: Dados com Codificação
-        frame1 = Gtk.Frame(label="Dados com Codificação")
-        vbox1 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
-        frame1.set_child(vbox1)
-        self.link_output1 = Gtk.TextView()
-        self.link_output1.set_size_request(250, 150)
-        self.link_output1.set_editable(False)
-        vbox1.append(self.link_output1)
-        grid.attach(frame1, 0, 0, 1, 1)
-
-        # Saída 2: Dados com Detecção de Erro
-        frame2 = Gtk.Frame(label="Dados com Detecção de Erro")
-        vbox2 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
-        frame2.set_child(vbox2)
-        self.link_output2 = Gtk.TextView()
-        self.link_output2.set_size_request(250, 150)
-        self.link_output2.set_editable(False)
-        vbox2.append(self.link_output2)
-        grid.attach(frame2, 1, 0, 1, 1)
-
-        # Saída 3: Dados com Controle de Fluxo
-        frame3 = Gtk.Frame(label="Dados com Controle de Fluxo")
-        vbox3 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
-        frame3.set_child(vbox3)
-        self.link_output3 = Gtk.TextView()
-        self.link_output3.set_size_request(250, 150)
-        self.link_output3.set_editable(False)
-        vbox3.append(self.link_output3)
-        grid.attach(frame3, 0, 1, 1, 1)
-
-        # Saída 4: Dados Finais do Enlace
-        frame4 = Gtk.Frame(label="Dados Finais do Enlace")
-        vbox4 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
-        frame4.set_child(vbox4)
-        self.link_output4 = Gtk.TextView()
-        self.link_output4.set_size_request(250, 150)
-        self.link_output4.set_editable(False)
-        vbox4.append(self.link_output4)
-        grid.attach(frame4, 1, 1, 1, 1)
-
-        return page
-
     def create_physical_page(self):
         """Cria a página física com 4 gráficos usando GraphFrame"""
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -314,15 +254,10 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
     def on_process_text(self, button):
         """Callback para processar texto"""
         # Obter texto de entrada
-        text_buffer = self.input_text.get_buffer()
-        start, end = text_buffer.get_bounds()
-        input_text = text_buffer.get_text(start, end, True)
+        bits = ''.join(format(ord(char), '08b') for char in self.input_text)
+        print(bits)
+        self.link_page.set_data_input(bits)
 
-        # Processar dados através de todas as camadas
-        result = self.process_data_through_layers(input_text)
-
-        # Atualizar todos os displays
-        self.update_all_displays(result)
 
     def on_update_graphs(self, button):
         """Callback para atualizar gráficos"""
