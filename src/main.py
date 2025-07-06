@@ -1,77 +1,206 @@
-import numpy as np
-import matplotlib.pyplot as plt
+#!/usr/bin/env python3
+import gi
+gi.require_version("Gtk", "4.0")
+from gi.repository import Gtk, Gdk # type:ignore
 
+import numpy as np
+from gui.config_page import ConfigPage
+from gui.aplication_frame import AplicationFrame
+from gui.link_page import LinkPage
+from gui.physical_page import PhysicalPage
+
+from base_window import BaseWindow
+
+class Window(BaseWindow, Gtk.ApplicationWindow):
+    def __init__(self, app):
+        # Inicializar BaseWindow primeiro
+        BaseWindow.__init__(self)
+        # Inicializar Gtk.ApplicationWindow
+        Gtk.ApplicationWindow.__init__(self, application=app, title="Sistema de Comunicação")
+        
+        self.size = (720, 480)
+        self.set_default_size(*self.size)
+
+        # Aplicar modo escuro
+        self.apply_dark_theme()
+
+        # Container principal
+        main_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.set_child(main_vbox)
+
+        # Criar seção de entrada/saída sempre visível
+        self.aplication_frame = AplicationFrame(on_process_text=self.on_process_text, set_variables={ "input_text": self.set_input_text })
+        main_vbox.append(self.aplication_frame)
+
+        # Notebook para organizar os 4 segmentos
+        notebook = Gtk.Notebook()
+        main_vbox.append(notebook)
+
+        # 1. Segmento de Configurações
+        config_page_variables = {
+            "frame_size": self.set_max_frame_size,
+            "modulation": self.set_modulation,
+            "bit_rate": self.set_bit_rate,
+            "sample_rate": self.set_sample_rate,
+            "coding": self.set_coding,
+            "error_detection": self.set_error_detection,
+            "snr": self.set_snr,
+        }
+
+        config_page = ConfigPage(
+            (self.size[0] - 32, self.size[1] - 32),
+            coding_options=self.coding_options_names,
+            error_detection_options=self.error_detection_options_names,
+            modulation_options=self.modulation_options_names,
+            analog_modulation_options=["FSK", "PSK", "QAM"],
+            set_variables=config_page_variables
+            )
+        notebook.append_page(config_page, Gtk.Label(label="Configurações"))
+
+        
+        # 2. Segmento de Enlace
+        self.link_page = LinkPage((self.size[0] - 32, self.size[1] - 32))
+        notebook.append_page(self.link_page, Gtk.Label(label="Enlace"))
+
+        # 3. Segmento Físico
+        self.physical_page = PhysicalPage((self.size[0] - 32, self.size[1] - 32))
+        notebook.append_page(self.physical_page, Gtk.Label(label="Física"))
+
+        notebook.set_current_page(1)
+
+    def apply_dark_theme(self):
+        """Aplica o tema escuro à aplicação"""
+        
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_path("src/main.css")
+        
+        display = Gdk.Display.get_default()
+        if display:
+            Gtk.StyleContext.add_provider_for_display(
+                display,
+                css_provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
+
+    def on_process_text(self, button):
+        """Callback para processar texto"""
+        bits = ''.join(format(ord(char), '08b') for char in self.input_text[:self.max_frame_size])
+
+        self.link_page.set_data_input(bits)
+        self.process_frame(np.array([int(bit) for bit in bits]))
+
+    def process_frame(self, bits:np.ndarray):
+
+        deframe_failed = False
+        edc_failed = False
+
+        if self.coding is not None and self.error_detector is not None:
+            try:
+                bits_with_edc = self.coding.add_edc(bits)
+                self.link_page.set_edc_input(''.join(map(lambda x: str(int(x)), bits_with_edc)))
+            except Exception as e:
+                bits_with_edc = bits
+                self.link_page.set_edc_input(e.args[0])
+        else:
+            bits_with_edc = bits
+            self.link_page.set_edc_input('Nenhum')
+
+        if self.coding is not None:
+            try:
+                framed_bits = self.coding.frame_data(bits)
+                self.link_page.set_frame_input(''.join(map(lambda x: str(int(x)), framed_bits)))
+            except Exception as e:
+                framed_bits = bits_with_edc
+                self.link_page.set_frame_input(e.args[0])
+        else:
+            framed_bits = bits_with_edc
+            self.link_page.set_frame_input('Nenhum')
+
+        self.link_page.set_sent_bits_input(''.join(map(lambda x: str(int(x)), framed_bits)))
+
+
+        encoded_bits = self.modulator.modulate(framed_bits)
+        x = np.linspace(0, len(encoded_bits) / self.sample_rate, num=len(encoded_bits))
+        self.physical_page.update_encoder_graph(x, encoded_bits)
+
+        self.communication.send(encoded_bits)
+        received_bits = self.communication.receive()
+        self.physical_page.update_decoder_graph(x, received_bits)
+
+        decoded_bits = self.modulator.demodulate(received_bits)
+        self.link_page.set_received_bits_output(''.join(map(lambda x: str(int(x)), decoded_bits)))
+
+        if self.coding is not None:
+            try:
+                deframed_bits = self.coding.deframe_data(decoded_bits)
+                self.link_page.set_frame_output(''.join(map(lambda x: str(int(x)), deframed_bits)))
+            except Exception as e:
+                deframed_bits = decoded_bits
+                self.link_page.set_frame_output(e.args[0])
+                deframe_failed = True
+        else:
+            deframed_bits = decoded_bits
+            self.link_page.set_frame_output('Nenhum')
+
+        if deframe_failed:
+            self.link_page.set_edc_output('Falha no desenquadramento')
+            self.link_page.set_data_output('Falha no desenquadramento')
+            self.aplication_frame.update_output("Falha no desenquadramento")
+            return
+
+        if self.coding is not None and self.error_detector is not None:
+            try:
+                if (error := self.coding.check_edc(deframed_bits)):
+                    raise ValueError(error)
+                no_error_bits = self.coding.remove_edc(deframed_bits)
+                self.link_page.set_edc_output(''.join(map(lambda x: str(int(x)), no_error_bits)))
+            except Exception as e:
+                no_error_bits = deframed_bits
+                self.link_page.set_edc_output(e.args[0])
+                edc_failed = True
+        else:
+            no_error_bits = deframed_bits
+            self.link_page.set_edc_output('Nenhum')
+
+        self.link_page.set_data_output(''.join(map(lambda x: str(int(x)), no_error_bits)))
+
+        if edc_failed:
+            self.link_page.set_data_output('Falha no EDC')
+            self.aplication_frame.update_output("Falha no EDC")
+            return
+
+        # Convert bits back to text for output
+        try:
+            # Convert bits to bytes
+            bit_string = ''.join(map(str, no_error_bits))
+            # Pad to complete bytes if necessary
+            if len(bit_string) % 8 != 0:
+                bit_string = bit_string.ljust(len(bit_string) + (8 - len(bit_string) % 8), '0')
+            
+            # Convert bytes to text
+            output_text = ''
+            for i in range(0, len(bit_string), 8):
+                byte = bit_string[i:i+8]
+                if byte:
+                    char_code = int(byte, 2)
+                    if char_code < 128:  # Only printable ASCII
+                        output_text += chr(char_code)
+            
+            # Update the application frame output
+            self.aplication_frame.update_output(output_text)
+        except Exception as e:
+            self.aplication_frame.update_output(f"Erro na decodificação: {str(e)}")
+
+
+
+
+class App(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id="org.example.communication")
+
+    def do_activate(self):
+        win = Window(self)
+        win.present()
 
 if __name__ == "__main__":
-    from data_link_layer.parity_error_detector import ParityErrorDetector
-    from data_link_layer.crc_error_detector import CRCErrorDetector
-
-    from data_link_layer.char_counting_framer import CharCountingFramer
-    from data_link_layer.byte_flag_framer import ByteFlagFramer
-    from data_link_layer.bits_flag_framer import BitsFlagFramer
-
-    # Generate a random sequence of bits    
-    bytes = np.random.randint(0, 256, size=4)
-    #bytes = np.array([126, 1, 125 ,126])
-
-    bits = CharCountingFramer.uint8_to_bits(bytes)
-
-    #error_detector = None
-    #error_detector = ParityErrorDetector(to_byte=True)
-    error_detector = CRCErrorDetector()
-
-    framer = CharCountingFramer(counter_size=1, error_detector=error_detector)
-    #framer = ByteFlagFramer(error_detector=error_detector)
-    #framer = BitsFlagFramer(error_detector=error_detector)
-
-    framed_bits = framer.frame_data(bits)
-
-    # Example usage of the NRZ modulator
-    from physical_layer.nrz_modulator import NRZModulator
-    from physical_layer.manchester_modulator import ManchesterModulator
-    from physical_layer.bipolar_modulator import BipolarModulator
-
-    # Create an instance of the NRZ modulator
-    modulator = NRZModulator(bit_rate=1e6, sample_rate=10e8)
-    #modulator = ManchesterModulator(bit_rate=1e6, sample_rate=10e8)
-    #modulator = BipolarModulator(bit_rate=1e6, sample_rate=10e8)
-
-    # Modulate the bits
-    modulated_signal = modulator.modulate(framed_bits)
-
-    from communication import Comunication
-    # Create a communication channel with a specified SNR
-    comm_channel = Comunication(snr=2)
-    comm_channel.send(modulated_signal)
-
-    received = comm_channel.receive()
-
-    demodulated_received_bit = modulator.demodulate(received)
-    #demodulated_received_bit[2] = 0
-    #demodulated_received_bit[-10] = 0
-
-    try:
-        deframed_received_bits = framer.deframe_data(demodulated_received_bit)
-    except ValueError as e:
-        print("Error: ",e)
-        deframed_received_bits = None
-
-    # Print results
-    print("Original Bytes: ", bytes)
-    print("Original Bits: ", bits)
-    #print("Framed Bytes: ", framer.bits_to_uint8(framed_bits))
-    print("Framed Bits: ", framed_bits)
-    print("Demodulated Received Bits: ", demodulated_received_bit)
-    print("Deframed Received Bits: ", deframed_received_bits)
-    print("Deframed Received Bytes: ", framer.bits_to_uint8(deframed_received_bits) if deframed_received_bits is not None else None)
-
-
-    plt.plot(np.linspace(0, len(received) / modulator.sample_rate, num=len(received)), received, color='red', )
-    plt.plot(np.linspace(0, len(modulated_signal) / modulator.sample_rate, num=len(modulated_signal)), modulated_signal)
-    plt.grid(axis='x')
-    #plt.xticks(np.arange(0, 1/ modulator.bit_rate, step=1/modulator.bit_rate))
-    plt.xticks(np.linspace(0, len(modulated_signal) / modulator.sample_rate, num=len(bits)+1))
-    plt.title("NRZ Modulated Signal")
-    plt.ylabel("Amplitude")
-    plt.xlabel("Time (s)")
-    plt.show()
+    App().run(None)

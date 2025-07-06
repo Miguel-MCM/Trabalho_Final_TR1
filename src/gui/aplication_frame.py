@@ -5,7 +5,7 @@ from gi.repository import Gtk, Gdk # type:ignore
 from collections.abc import Callable
 
 class AplicationFrame(Gtk.Frame):
-    def __init__(self, on_process_text: Callable[[], None], set_variables:dict[str, Callable[[str], None]] = {}):
+    def __init__(self, on_process_text: Callable[[Gtk.Widget], None], set_variables:dict[str, Callable[[str], None]] = {}):
         super().__init__()
         self.set_css_classes(["aplication_frame"])
         self.set_margin_start(10)
@@ -35,7 +35,7 @@ class AplicationFrame(Gtk.Frame):
         self.input_text = Gtk.TextView()
         self.input_text.set_size_request(200, 24) 
         self.input_text.set_hexpand(True)
-        self.input_text.set_vexpand(True)  # Impedir expansão vertical
+        self.input_text.set_vexpand(True) 
         self.input_text.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)  # Habilitar quebra de texto
         self.input_text.set_name("input_text")
         self.input_text.get_buffer().connect('changed', lambda *_: self.update_input_text())
@@ -47,7 +47,7 @@ class AplicationFrame(Gtk.Frame):
         self.input_bits = Gtk.TextView()
         self.input_bits.set_size_request(200, 24)
         self.input_bits.set_hexpand(True)
-        self.input_bits.set_vexpand(True)  # Impedir expansão vertical
+        self.input_bits.set_vexpand(True) 
         self.input_bits.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)  # Habilitar quebra de texto
         self.input_bits.set_editable(False)
         input_vbox.append(self.input_bits)
@@ -70,7 +70,8 @@ class AplicationFrame(Gtk.Frame):
         self.output_text = Gtk.TextView()
         self.output_text.set_size_request(200, 24)
         self.output_text.set_hexpand(True)
-        self.output_text.set_vexpand(True)  # Impedir expansão vertical
+        self.output_text.set_vexpand(True) 
+        self.output_text.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)  # Habilitar quebra de texto
         self.output_text.set_editable(False)
         output_vbox.append(self.output_text)
 
@@ -80,8 +81,9 @@ class AplicationFrame(Gtk.Frame):
         self.output_bits.set_size_request(200, 24)
         
         self.output_bits.set_hexpand(True)
-        self.output_bits.set_vexpand(True)  # Impedir expansão vertical
+        self.output_bits.set_vexpand(True) 
         self.output_bits.set_editable(False)
+        self.output_bits.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)  # Habilitar quebra de texto
         output_vbox.append(self.output_bits)
 
         hbox.append(output_frame)
@@ -92,8 +94,8 @@ class AplicationFrame(Gtk.Frame):
 
     def update_input_text(self):
         text = self.get_text_view_text(self.input_text)
-        self.input_bits.get_buffer().set_text(''.join(format(ord(char), '02x') for char in text))
+        self.input_bits.get_buffer().set_text('0x' + ''.join(format(ord(char), '02x') for char in text))
 
     def update_output(self, text: str):
         self.output_text.get_buffer().set_text(text)
-        self.output_bits.get_buffer().set_text(''.join(format(ord(char), '02x') for char in text))
+        self.output_bits.get_buffer().set_text('0x' + ''.join(format(ord(char), '02x') for char in text))

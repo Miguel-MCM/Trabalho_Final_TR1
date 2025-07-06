@@ -93,6 +93,23 @@ class LinkPage(Gtk.Box):
         vbox3_input.append(self.link_input3)
         input_grid.attach(frame3_input, 0, 2, 1, 1)
 
+        # Bit Enviados Input
+        frame4_input = Gtk.Frame(label="Bit Enviados")
+        frame4_input.set_css_classes(["link_frame"])
+        vbox4_input = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        frame4_input.set_child(vbox4_input)
+        self.link_input4 = Gtk.TextView()
+        self.link_input4.set_size_request(size[0]//2 - 30, size[1]//4)
+        self.link_input4.set_editable(False)
+        self.link_input4.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.link_input4.set_cursor_visible(False)
+        self.link_input4.set_monospace(True)
+        self.link_input4.set_hexpand(True)
+        self.link_input4.set_vexpand(False)
+        self.link_input4.set_css_classes(["link_textview"])
+        vbox4_input.append(self.link_input4)
+        input_grid.attach(frame4_input, 0, 3, 1, 1)
+
         main_container.append(input_column)
 
         # Coluna Output
@@ -163,6 +180,25 @@ class LinkPage(Gtk.Box):
         vbox3_output.append(self.link_output3)
         output_grid.attach(frame3_output, 0, 2, 1, 1)
 
+        # Bit Enviados Output
+        frame4_output = Gtk.Frame(label="Bit Recebidos")
+        frame4_output.set_css_classes(["link_frame"])
+        vbox4_output = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        frame4_output.set_child(vbox4_output)
+        self.link_output4 = Gtk.TextView()
+        self.link_output4.set_size_request(size[0]//2 - 30, size[1]//4)
+        self.link_output4.set_editable(False)
+        self.link_output4.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.link_output4.set_cursor_visible(False)
+        self.link_output4.set_monospace(True)
+        self.link_output4.set_hexpand(True)
+        self.link_output4.set_vexpand(False)
+        self.link_output4.set_css_classes(["link_textview"])
+        vbox4_output.append(self.link_output4)
+        output_grid.attach(frame4_output, 0, 3, 1, 1)
+
+        
+
         main_container.append(output_column)
 
     # Setters
@@ -183,3 +219,9 @@ class LinkPage(Gtk.Box):
 
     def set_frame_output(self, frame:str):
         self.link_output3.get_buffer().set_text(frame)
+
+    def set_sent_bits_input(self, bits:str):
+        self.link_input4.get_buffer().set_text(bits)
+
+    def set_received_bits_output(self, bits:str):
+        self.link_output4.get_buffer().set_text(bits)

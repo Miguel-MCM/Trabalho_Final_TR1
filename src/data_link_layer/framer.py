@@ -17,6 +17,30 @@ class Framer:
         """
         self.error_detector = error_detector
 
+    def add_edc(self, data: np.ndarray) -> np.ndarray:
+        """
+        Add error detection code to the data.
+        """
+        if self.error_detector is not None:
+            return self.error_detector.add_trailer(data)
+        return data
+
+    def check_edc(self, data: np.ndarray) -> str:
+        """
+        Check if the data has an error detection code.
+        """
+        if self.error_detector is not None:
+            return self.error_detector.check(data)
+        return ""
+
+    def remove_edc(self, data: np.ndarray) -> np.ndarray:
+        """
+        Remove error detection code from the data.
+        """
+        if self.error_detector is not None:
+            return self.error_detector.remove_trailer(data)
+        return data
+
     @abstractmethod
     def frame_data(self, data: np.ndarray) -> np.ndarray:
         """

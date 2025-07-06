@@ -83,9 +83,4 @@ class BitsFlagFramer(Framer):
         if indices.size != 0:
             deframed_data = np.delete(deframed_data, indices)
 
-        if self.error_detector is not None:
-            if (error := self.error_detector.check(deframed_data)):
-                raise ValueError(error)
-            deframed_data = self.error_detector.remove_trailer(deframed_data)
-
         return deframed_data

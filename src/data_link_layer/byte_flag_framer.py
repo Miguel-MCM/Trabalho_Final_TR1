@@ -107,9 +107,5 @@ class ByteFlagFramer(Framer):
             raise ValueError("Framed data does not include flags.")
         
         deframed_bits = self.uint8_to_bits(deframed)
-        if self.error_detector is not None:
-            if  (error := self.error_detector.check(deframed_bits)):
-                raise ValueError(error)
-            deframed_bits = self.error_detector.remove_trailer(deframed_bits)
-
+        
         return deframed_bits

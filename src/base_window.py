@@ -73,15 +73,15 @@ class BaseWindow:
             self._update_modulator()
         
         def set_bit_rate(x: str):
-            self.bit_rate = float(x)
+            self.bit_rate = float(x.replace(',', '.'))
             self._update_modulator()
         
         def set_sample_rate(x: str):
-            self.sample_rate = float(x)
+            self.sample_rate = float(x.replace(',', '.'))
             self._update_modulator()
 
         def set_snr(x: str):
-            self.snr = float(x)
+            self.snr = float(x.replace(',', '.'))
             self.communication = CommunicationChannel(snr=self.snr)
         
         # Atribuir as funções como métodos da classe
@@ -98,15 +98,21 @@ class BaseWindow:
         """Cria as funções update para recriar objetos baseados nas configurações"""
         def update_coding():
             if self.coding_options[self.coding_index] is not None:
-                self.coding = self.coding_options[self.coding_index]()
+                if self.error_detection_index == 1 and (self.coding_index in [1, 2]):
+                    self.error_detector = self.error_detection_options[self.error_detection_index](to_byte=True)
+                self.coding = self.coding_options[self.coding_index](error_detector=self.error_detector)
             else:
                 self.coding = None
         
         def update_error_detection():
             if self.error_detection_options[self.error_detection_index] is not None:
-                self.error_detector = self.error_detection_options[self.error_detection_index]()
+                if self.error_detection_index == 1 and (self.coding_index in [1, 2]):
+                    self.error_detector = self.error_detection_options[self.error_detection_index](to_byte=True)
+                else:
+                    self.error_detector = self.error_detection_options[self.error_detection_index]()
             else:
                 self.error_detector = None
+            self._update_coding()
         
         def update_modulator():
             self.modulator = self.modulation_options[self.modulation_index](
