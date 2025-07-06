@@ -14,7 +14,8 @@ class ASKCarrierModulator(CarrierModulator):
     Usa o mapeamento de possíveis finais para converter os sinais em amplitudes.
     """
     expanded = np.repeat(bits, self.samples_per_bit)
-    return expanded * np.sin(2 * np.pi * self.carrier_frequency * np.linspace(0, bits.size * self.sample_rate, expanded.size))
+    time = np.linspace(0, bits.size / self.bit_rate, expanded.size, endpoint=False)
+    return expanded * np.sin(2 * np.pi * self.carrier_frequency * time)
 
   def demodulate(self, signal: np.ndarray) -> np.ndarray:
     """
@@ -37,5 +38,4 @@ class ASKCarrierModulator(CarrierModulator):
     # Usa um limiar baseado na média da energia
     threshold = np.mean(energy)
     demodulated_bits = (energy > threshold).astype(int)
-    print(demodulated_bits)
     return demodulated_bits

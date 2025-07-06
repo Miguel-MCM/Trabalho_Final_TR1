@@ -45,6 +45,10 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
             "coding": self.set_coding,
             "error_detection": self.set_error_detection,
             "snr": self.set_snr,
+            "use_carrier_modulation": self.set_use_carrier_modulation,
+            "analog_modulation": self.set_analog_modulation,
+            "analog_frequency": self.set_analog_frequency,
+            "analog_sample_rate": self.set_analog_sample_rate,
         }
 
         config_page = ConfigPage(
@@ -52,7 +56,7 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
             coding_options=self.coding_options_names,
             error_detection_options=self.error_detection_options_names,
             modulation_options=self.modulation_options_names,
-            analog_modulation_options=["FSK", "PSK", "QAM"],
+            analog_modulation_options=self.analog_modulation_options_names,
             set_variables=config_page_variables
             )
         notebook.append_page(config_page, Gtk.Label(label="Configurações"))
@@ -118,8 +122,14 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
 
         self.link_page.set_sent_bits_input(''.join(map(lambda x: str(int(x)), framed_bits)))
 
+        # Aplicar modulação baseada na configuração
+        if self.carrier_modulator is not None:
+            # Usar apenas modulação de portadora
+            encoded_bits = self.carrier_modulator.modulate(framed_bits)
+        else:
+            # Usar apenas modulação digital de banda base
+            encoded_bits = self.modulator.modulate(framed_bits)
 
-        encoded_bits = self.modulator.modulate(framed_bits)
         x = np.linspace(0, len(encoded_bits) / self.sample_rate, num=len(encoded_bits))
         self.physical_page.update_encoder_graph(x, encoded_bits)
 
@@ -127,7 +137,15 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         received_bits = self.communication.receive()
         self.physical_page.update_decoder_graph(x, received_bits)
 
-        decoded_bits = self.modulator.demodulate(received_bits)
+        # Aplicar demodulação baseada na configuração
+        if self.carrier_modulator is not None:
+            # Usar apenas demodulação de portadora
+            decoded_bits = self.carrier_modulator.demodulate(received_bits)
+        else:
+            # Usar apenas demodulação digital de banda base
+            decoded_bits = self.modulator.demodulate(received_bits)
+
+        decoded_bits = decoded_bits[: len(decoded_bits) // 8 * 8] # Remove 8-QAM padding
         self.link_page.set_received_bits_output(''.join(map(lambda x: str(int(x)), decoded_bits)))
 
         if self.coding is not None:

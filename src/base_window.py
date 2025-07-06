@@ -1,4 +1,4 @@
-from physical_layer import BipolarModulator, ManchesterModulator, NRZModulator
+from physical_layer import BipolarModulator, ManchesterModulator, NRZModulator, ASKCarrierModulator, FSKCarrierModulator, PSKCarrierModulator, QAMCarrierModulator
 from data_link_layer import ByteFlagFramer, BitsFlagFramer, CharCountingFramer, ParityErrorDetector, CRCErrorDetector
 from communication import CommunicationChannel
 
@@ -9,6 +9,8 @@ class BaseWindow:
         self.coding = None
         self.error_detector = None
         self.modulator = NRZModulator(bit_rate=1000, sample_rate=10000)
+        self.carrier_modulator = None
+        self.use_carrier_modulation = False
 
         # Inicializar configurações
         self._init_configurations()
@@ -47,7 +49,8 @@ class BaseWindow:
         
         # Configurações de modulação analógica
         self.analog_modulation_index = 0
-        self.analog_modulation_options_names = ["FSK", "PSK", "QAM"]
+        self.analog_modulation_options = [ASKCarrierModulator, FSKCarrierModulator, PSKCarrierModulator, QAMCarrierModulator]
+        self.analog_modulation_options_names = ["ASK", "FSK", "PSK", "8-QAM"]
         self.analog_frequency = 1000
         self.analog_sample_rate = 1000000
 
@@ -83,6 +86,22 @@ class BaseWindow:
         def set_snr(x: str):
             self.snr = float(x.replace(',', '.'))
             self.communication = CommunicationChannel(snr=self.snr)
+
+        def set_use_carrier_modulation(x: bool):
+            self.use_carrier_modulation = x
+            self._update_carrier_modulator()
+
+        def set_analog_modulation(x: int):
+            self.analog_modulation_index = x
+            self._update_carrier_modulator()
+
+        def set_analog_frequency(x: str):
+            self.analog_frequency = float(x.replace(',', '.'))
+            self._update_carrier_modulator()
+
+        def set_analog_sample_rate(x: str):
+            self.analog_sample_rate = float(x.replace(',', '.'))
+            self._update_carrier_modulator()
         
         # Atribuir as funções como métodos da classe
         self.set_max_frame_size = set_max_frame_size
@@ -93,6 +112,10 @@ class BaseWindow:
         self.set_sample_rate = set_sample_rate
         self.set_snr = set_snr
         self.set_input_text = set_input_text
+        self.set_use_carrier_modulation = set_use_carrier_modulation
+        self.set_analog_modulation = set_analog_modulation
+        self.set_analog_frequency = set_analog_frequency
+        self.set_analog_sample_rate = set_analog_sample_rate
 
     def _create_update_functions(self):
         """Cria as funções update para recriar objetos baseados nas configurações"""
@@ -119,11 +142,31 @@ class BaseWindow:
                 bit_rate=self.bit_rate, 
                 sample_rate=self.sample_rate
             )
+
+        def update_carrier_modulator():
+            if self.use_carrier_modulation:
+                if self.analog_modulation_index == 1:
+                    self.carrier_modulator = self.analog_modulation_options[self.analog_modulation_index](
+                        carrier_frequency=self.analog_frequency,
+                        bit_rate=self.bit_rate, 
+                        sample_rate=self.sample_rate,
+                        delta_frequency=self.analog_frequency
+                    )
+                else:
+                    self.carrier_modulator = self.analog_modulation_options[self.analog_modulation_index](
+                        carrier_frequency=self.analog_frequency,
+                        bit_rate=self.bit_rate,
+                        sample_rate=self.analog_sample_rate
+                )
+            else:
+                self.carrier_modulator = None
+
         
         # Atribuir as funções como métodos da classe
         self._update_coding = update_coding
         self._update_error_detection = update_error_detection
         self._update_modulator = update_modulator
+        self._update_carrier_modulator = update_carrier_modulator
 
     def _setup_objects(self):
         """Configura os objetos iniciais baseados nas configurações padrão"""
@@ -135,3 +178,6 @@ class BaseWindow:
         
         # Configurar modulador
         self._update_modulator()
+
+        # Configurar modulador de portadora
+        self._update_carrier_modulator()

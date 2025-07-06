@@ -305,5 +305,63 @@ graph_frame canvas {
   padding: 5px;
 }
 
+/* Switch Styles */
+switch {
+  background-color: #3c3c3c;
+  border: 1px solid #555555;
+  border-radius: 15px;
+  padding: 2px;
+  min-width: 40px;
+  min-height: 20px;
+}
+
+switch slider {
+  background-color: #666666;
+  border: 1px solid #777777;
+  border-radius: 10px;
+  min-width: 16px;
+  min-height: 16px;
+  margin: 1px;
+}
+
+switch image {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+}
+
+switch:checked {
+  background-color: #4b6ac0;
+  border-color: #5b8cc0;
+}
+
+switch:checked slider {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  margin-left: 21px;
+}
+
+switch:hover {
+  background-color: #4a4a4a;
+  border-color: #666666;
+}
+
+switch:checked:hover {
+  background-color: #5b8cc0;
+  border-color: #6b9cc0;
+}
+
+switch:active {
+  background-color: #3a3a3a;
+}
+
+switch:checked:active {
+  background-color: #3b8cc0;
+}
+
 
 

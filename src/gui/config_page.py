@@ -147,11 +147,24 @@ class ConfigPage(Gtk.Box):
         # Sample rate entry
         self.sample_rate_entry = Gtk.Entry()
         self.sample_rate_entry.set_name("sample_rate")
-        self.sample_rate_entry.set_text("1000")
+        self.sample_rate_entry.set_text("10000")
         id_set_v = self.sample_rate_entry.connect_after('changed', lambda *_: self.set_variable(self.sample_rate_entry, self.sample_rate_entry.get_text))
         self.sample_rate_entry.connect('changed', self.check_numeric_entry, [id_set_v], True)
         self.sample_rate_entry.set_hexpand(True)
         dg_grid.attach(self.sample_rate_entry, 1, 2, 1, 1)
+
+        # Carrier Modulation Switch
+        carrier_switch_label = Gtk.Label(label="Usar Modulação de Portadora:")
+        carrier_switch_label.set_hexpand(True)
+        carrier_switch_label.set_halign(Gtk.Align.START)
+        dg_grid.attach(carrier_switch_label, 0, 3, 1, 1)
+        
+        self.carrier_switch = Gtk.Switch()
+        self.carrier_switch.set_name("use_carrier_modulation")
+        self.carrier_switch.set_active(False)
+        self.carrier_switch.connect('notify::active', lambda *_: self.set_variable(self.carrier_switch, self.carrier_switch.get_active))
+        self.carrier_switch.set_hexpand(True)
+        dg_grid.attach(self.carrier_switch, 1, 3, 1, 1)
 
         # Analog Modulation Config
         title = Gtk.Label(label="Configurações de Modulação Analógica")
@@ -185,6 +198,21 @@ class ConfigPage(Gtk.Box):
         self.analog_modulation_combo.set_hexpand(True)
         an_grid.attach(self.analog_modulation_combo, 1, 0, 1, 1)
 
+        # Frequency
+        frequency_label = Gtk.Label(label="Frequência da Portadora (Hz):")
+        frequency_label.set_hexpand(True)
+        frequency_label.set_halign(Gtk.Align.START)
+        an_grid.attach(frequency_label, 0, 1, 1, 1)
+        
+        # Frequency entry
+        self.analog_frequency_entry = Gtk.Entry()
+        self.analog_frequency_entry.set_name("analog_frequency")
+        self.analog_frequency_entry.set_text("1000")
+        id_set_v = self.analog_frequency_entry.connect_after('changed', lambda *_: self.set_variable(self.analog_frequency_entry, self.analog_frequency_entry.get_text))
+        self.analog_frequency_entry.connect('changed', self.check_numeric_entry, [id_set_v], True)
+        self.analog_frequency_entry.set_hexpand(True)
+        an_grid.attach(self.analog_frequency_entry, 1, 1, 1, 1)
+
         # Sample rate
         sample_rate_label = Gtk.Label(label="Taxa de Amostragem (Hz):")
         sample_rate_label.set_hexpand(True)
@@ -199,21 +227,6 @@ class ConfigPage(Gtk.Box):
         self.analog_sample_rate_entry.connect('changed', self.check_numeric_entry, [id_set_v], True)
         self.analog_sample_rate_entry.set_hexpand(True)
         an_grid.attach(self.analog_sample_rate_entry, 1, 2, 1, 1)
-
-        # Frequency
-        frequency_label = Gtk.Label(label="Frequência (Hz):")
-        frequency_label.set_hexpand(True)
-        frequency_label.set_halign(Gtk.Align.START)
-        an_grid.attach(frequency_label, 0, 3, 1, 1)
-        
-        # Frequency entry
-        self.analog_frequency_entry = Gtk.Entry()
-        self.analog_frequency_entry.set_name("analog_frequency")
-        self.analog_frequency_entry.set_text("1000")
-        id_set_v = self.analog_frequency_entry.connect_after('changed', lambda *_: self.set_variable(self.analog_frequency_entry, self.analog_frequency_entry.get_text))
-        self.analog_frequency_entry.connect('changed', self.check_numeric_entry, [id_set_v], True)
-        self.analog_frequency_entry.set_hexpand(True)
-        an_grid.attach(self.analog_frequency_entry, 1, 3, 1, 1)
     
 
     def check_numeric_entry(self, entry:Gtk.Entry, block_ids:list[int] = [], allow_comma:bool = False):

@@ -43,14 +43,14 @@ if __name__ == "__main__":
     from physical_layer.fsk_carrier_modulator import FSKCarrierModulator
     from physical_layer.qam_carrier_modulator import QAMCarrierModulator
     #ask_modulator = ASKCarrierModulator(carrier_frequency=2e6, bit_rate=1e6, sample_rate=10e8)
-    #ask_modulator = FSKCarrierModulator(carrier_frequency=1.5, bit_rate=1, sample_rate=1e3, delta_frequency=1)
-    ask_modulator = QAMCarrierModulator(carrier_frequency=1.5, bit_rate=1, sample_rate=1e3)
+    ask_modulator = FSKCarrierModulator(carrier_frequency=1e6, bit_rate=1e6, sample_rate=10e8, delta_frequency=1e6)
+    #ask_modulator = QAMCarrierModulator(carrier_frequency=1.5, bit_rate=1, sample_rate=1e3)
 
     ask_modulated_signal = ask_modulator.modulate(framed_bits)
 
     from communication import CommunicationChannel
     # Create a communication channel with a specified SNR
-    comm_channel = CommunicationChannel(snr=2000)
+    comm_channel = CommunicationChannel(snr=5)
     comm_channel.send(ask_modulated_signal)
 
     received = comm_channel.receive()

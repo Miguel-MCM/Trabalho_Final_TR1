@@ -43,7 +43,7 @@ class PhysicalPage(Gtk.Box):
 
         # Tamanho fixo dos gráficos
         graph_width = size[0]//2  # Tamanho fixo em pixels
-        graph_height = size[1]//2  # Tamanho fixo em pixels
+        graph_height = size[1]  # Tamanho fixo em pixels
 
         # Gráfico 1: Codificador Banda Base
         self.graph1 = GraphFrame(
@@ -55,28 +55,6 @@ class PhysicalPage(Gtk.Box):
         self.graph1.set_size_request(graph_width, graph_height)
         self.graph1.set_hexpand(False)
         grid.attach(self.graph1, 0, 0, 1, 1)
-
-        # Gráfico 2: Modulador
-        self.graph2 = GraphFrame(
-            title="Modulador",
-            size=(graph_width, graph_height),
-            xlabel="Tempo (s)",
-            ylabel="Amplitude"
-        )
-        self.graph2.set_size_request(graph_width, graph_height) 
-        self.graph2.set_hexpand(False)
-        grid.attach(self.graph2, 0, 1, 1, 1)
-
-        # Gráfico 3: Demodulador
-        self.graph3 = GraphFrame(
-            title="Demodulador",
-            size=(graph_width, graph_height),
-            xlabel="Tempo (s)",
-            ylabel="Amplitude"
-        )
-        self.graph3.set_size_request(graph_width, graph_height)
-        self.graph3.set_hexpand(False)
-        grid.attach(self.graph3, 1, 1, 1, 1)
 
         # Gráfico 4: Decodificador Banda Base
         self.graph4 = GraphFrame(
@@ -91,12 +69,6 @@ class PhysicalPage(Gtk.Box):
 
     def update_encoder_graph(self, x:np.ndarray, y:np.ndarray):
         self.graph1.update(x, y)
-
-    def update_modulator_graph(self, x:np.ndarray, y:np.ndarray):
-        self.graph2.update(x, y)
-
-    def update_demodulator_graph(self, x:np.ndarray, y:np.ndarray):
-        self.graph3.update(x, y)
 
     def update_decoder_graph(self, x:np.ndarray, y:np.ndarray):
         self.graph4.update(x, y)
