@@ -28,6 +28,7 @@ class BipolarModulator(DigitalModulator):
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
         """
         Demodulate a Bipolar signal back into a sequence of bits.
+        Uses energy-based detection by calculating the energy of each bit period.
         
         Parameters:
         signal (np.ndarray): Bipolar signal to demodulate.
@@ -35,5 +36,22 @@ class BipolarModulator(DigitalModulator):
         Returns:
         np.ndarray: Demodulated bits.
         """
-        bits = signal[self.samples_per_bit//2::self.samples_per_bit]
-        return np.where( np.abs(bits) < 0.5, 0, 1 ).astype(int)
+        num_bits = len(signal) // self.samples_per_bit
+        demodulated_bits = np.zeros(num_bits, dtype=int)
+        
+        for i in range(num_bits):
+            start_idx = i * self.samples_per_bit
+            end_idx = start_idx + self.samples_per_bit
+            bit_period = signal[start_idx:end_idx]
+            
+            # Calculate energy of the bit period
+            energy = np.sum(bit_period ** 2)
+            
+            # For bipolar encoding:
+            # - Bit '0' has zero amplitude (energy ≈ 0)
+            # - Bit '1' has non-zero amplitude (energy > 0)
+            # Use energy threshold to distinguish between 0 and 1
+            threshold = 0.5 * self.samples_per_bit  # Energy threshold
+            demodulated_bits[i] = 1 if energy > threshold else 0
+            
+        return demodulated_bits

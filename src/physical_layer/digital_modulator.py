@@ -37,3 +37,9 @@ class DigitalModulator:
         """
         pass
 
+    def get_time(self, signal: np.ndarray) -> np.ndarray:
+        """
+        Get the time array for the signal.
+        """
+        return np.linspace(0, len(signal) / self.sample_rate, num=len(signal))
+

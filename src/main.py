@@ -194,7 +194,7 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
 
 
 
-class App(Gtk.Application):
+class Simulator(Gtk.Application):
     def __init__(self):
         super().__init__(application_id="org.example.communication")
 
@@ -203,4 +203,4 @@ class App(Gtk.Application):
         win.present()
 
 if __name__ == "__main__":
-    App().run(None)
+    Simulator().run(None)
