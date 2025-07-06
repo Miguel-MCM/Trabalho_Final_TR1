@@ -7,7 +7,7 @@ class CarrierModulator:
   This class defines the interface for carrier modulation schemes.
   It includes methods for modulation and demodulation of signals.
   """
-  def __init__(self, carrier_frequency: float, signals: np.ndarray = np.array([0, 1])):
+  def __init__(self, carrier_frequency: float, bit_rate: float, sample_rate: float):
     """
     Initialize the carrier modulator.
 
@@ -16,10 +16,12 @@ class CarrierModulator:
     signals (list[float]): List of signals to use for modulation.
     """
     self.carrier_frequency = carrier_frequency
-    self.signals = signals
+    self.bit_rate = bit_rate
+    self.sample_rate = sample_rate
+    self.samples_per_bit = int(sample_rate / bit_rate)
 
   @abstractmethod
-  def modulate(self, signal: np.ndarray, time: np.ndarray) -> np.ndarray:
+  def modulate(self, bits: np.ndarray) -> np.ndarray:
     """
     Modulate a signal using the carrier modulation scheme.
 
@@ -32,7 +34,7 @@ class CarrierModulator:
     pass
 
   @abstractmethod
-  def demodulate(self, signal: np.ndarray, time: np.ndarray) -> np.ndarray:
+  def demodulate(self, signal: np.ndarray) -> np.ndarray:
     """
     Demodulate a signal using the carrier modulation scheme.
 
@@ -43,3 +45,6 @@ class CarrierModulator:
     np.ndarray: Demodulated signal.
     """
     pass
+
+  def get_time(self, signal: np.ndarray) -> np.ndarray:
+    return np.arange(len(signal)) / self.sample_rate
