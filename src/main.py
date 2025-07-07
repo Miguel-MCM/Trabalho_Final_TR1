@@ -93,14 +93,14 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         bits = ''.join(format(ord(char), '08b') for char in self.input_text[:self.max_frame_size])
 
         self.link_page.set_data_input(bits)
-        self.process_frame(np.array([int(bit) for bit in bits]))
+        encoded_bits = self.send_frame(np.array([int(bit) for bit in bits]))
+        received_bits = self.communication.receive()
+        self.receive_frame(received_bits)
 
-    def process_frame(self, bits:np.ndarray):
-
-        deframe_failed = False
-        edc_failed = False
-
-         # Handle error detection and correction
+    def send_frame(self, bits: np.ndarray):
+        """Processa o envio de dados - aplica EDC, framing e modulação"""
+        
+        # Handle error detection and correction
         if self.error_corrector is not None:
             # Use Hamming error correction
             try:
@@ -153,7 +153,15 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         self.physical_page.update_encoder_graph(x, encoded_bits)
 
         self.communication.send(encoded_bits)
-        received_bits = self.communication.receive()
+        return encoded_bits
+
+    def receive_frame(self, received_bits: np.ndarray):
+        """Processa o recebimento de dados - aplica demodulação, deframing e EDC"""
+        
+        deframe_failed = False
+        edc_failed = False
+
+        x = np.linspace(0, len(received_bits) / self.sample_rate, num=len(received_bits))
         self.physical_page.update_decoder_graph(x, received_bits)
 
         # Aplicar demodulação baseada na configuração
@@ -257,8 +265,11 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         except Exception as e:
             self.aplication_frame.update_output(f"Erro na decodificação: {str(e)}")
 
-
-
+    def process_frame(self, bits:np.ndarray):
+        """Método legado que combina envio e recebimento - mantido para compatibilidade"""
+        encoded_bits = self.send_frame(bits)
+        received_bits = self.communication.receive()
+        self.receive_frame(received_bits)
 
 class Simulator(Gtk.Application):
     def __init__(self):
