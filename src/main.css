@@ -1,0 +1,367 @@
+* {
+  background-color: #2d2d2d;
+  color: #ffffff;
+
+/*
+  border: 1px dashed  red;
+*/
+}
+
+label {
+  color: #ffffff;
+}
+
+popover {
+  background-color: transparent;
+}
+
+popover arrow {
+  background-color: transparent;
+}
+
+entry {
+  background-color: #3c3c3c;
+  color: #ffffff;
+  border: 1px solid #555555;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+entry * {
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  margin: 5px;
+  color: #ffffff;
+}
+
+entry:hover {
+  background-color: #4a4a4a;
+}
+
+entry:active {
+  background-color: #3a3a3a;
+}
+
+dropdown {
+  background-color: #3c3c3c;
+  padding: 5px;
+  color: #ffffff;
+  border: 1px solid #555555;
+  border-radius: 3px;
+  outline: none;
+  
+
+}
+
+dropdown button {
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  padding: 5px;
+  margin: 0;
+  color: #ffffff;
+}
+
+dropdown button * {
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+  color: #ffffff;
+}
+
+dropdown:hover {
+  background-color: #4a4a4a;
+}
+
+dropdown:active {
+  background-color: #3a3a3a;
+}
+
+textview {
+  background-color: #3c3c3c;
+  color: #ffffff;
+  border: 1px solid #555555;
+  border-radius: 3px;
+}
+
+/* TextViews da aplicação com altura fixa */
+frame.aplication_frame textview {
+  max-height: 24px;
+  min-height: 24px;
+}
+
+frame {
+  border: 1px solid #555555;
+  border-radius: 3px;
+}
+
+frame.aplication_frame {
+  padding: 5px;
+}
+
+frame.aplication_frame button {
+  background-color: #3c3c3c;
+  outline: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+frame.aplication_frame button label:hover {
+  background-color: #4a4a4a;
+}
+
+frame.aplication_frame button label:active {
+  background-color: #3a3a3a;
+}
+
+frame.aplication_frame button * {
+  background-color: #3c3c3c;
+  color: #ffffff;
+  border: 1px solid #555555;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+frame.aplication_frame frame {
+  padding: 5px;
+}
+
+
+notebook {
+  background-color: #2d2d2d;
+}
+
+notebook tab {
+  background-color: #3c3c3c;
+  color: #ffffff;
+  border: 1px solid #555555;
+  border-radius: 3px 3px 0 0;
+  padding: 8px 16px;
+}
+
+notebook tab * {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+}
+
+notebook tab:checked {
+  background-color: #4a4a4a;
+}
+
+grid {
+  background-color: transparent;
+}
+
+box {
+  background-color: transparent;
+}
+
+/* Link Page Styles */
+
+.section_label {
+  padding: 5px 10px;
+}
+
+.input_column {
+  background-color: #2d2d2d;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #444444;
+}
+
+.output_column {
+  background-color: #2d2d2d;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #444444;
+}
+
+.input_grid {
+  background-color: transparent;
+  padding: 5px;
+}
+
+.output_grid {
+  background-color: transparent;
+  padding: 5px;
+}
+
+.link_frame {
+  padding: 5px;
+  margin: 2px;
+  border: none;
+}
+
+.link_textview {
+  background-color: #2a2a2a;
+  color: #ffffff;
+  padding: 8px;
+  font-family: 'Monospace', monospace;
+  font-size: 12px;
+}
+
+.link_textview * {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+}
+
+/* Physical Page Styles */
+.physical_page {
+  background-color: #2d2d2d;
+  color: #ffffff;
+}
+
+.physical_page grid {
+  background-color: transparent;
+}
+
+.physical_page box {
+  background-color: transparent;
+}
+
+/* Graph Frame Styles */
+graph_frame {
+  background-color: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+graph_frame canvas {
+  background-color: #2b2b2b;
+}
+
+graph_frame toolbar {
+  background-color: #3c3c3c;
+  border: 1px solid #555555;
+  border-radius: 3px;
+  margin-bottom: 5px;
+}
+
+graph_frame toolbar button {
+  background-color: #3c3c3c;
+  color: #ffffff;
+  border: 1px solid #555555;
+  border-radius: 3px;
+  padding: 3px 6px;
+  margin: 1px;
+}
+
+graph_frame toolbar button:hover {
+  background-color: #4a4a4a;
+}
+
+graph_frame toolbar button:active {
+  background-color: #3a3a3a;
+}
+
+/* Dark Canvas Styles */
+.dark_canvas {
+  background-color: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 3px;
+}
+
+.dark_canvas * {
+  background-color: #2b2b2b;
+}
+
+
+
+/* Graph Frame Fixed Size */
+graph_frame {
+  background-color: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+graph_frame canvas {
+  background-color: #2b2b2b;
+}
+
+/* Fixed Graph Container */
+.fixed_graph_container {
+  background-color: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+/* Switch Styles */
+switch {
+  background-color: #3c3c3c;
+  border: 1px solid #555555;
+  border-radius: 15px;
+  padding: 2px;
+  min-width: 40px;
+  min-height: 20px;
+}
+
+switch slider {
+  background-color: #666666;
+  border: 1px solid #777777;
+  border-radius: 10px;
+  min-width: 16px;
+  min-height: 16px;
+  margin: 1px;
+}
+
+switch image {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+}
+
+switch:checked {
+  background-color: #4b6ac0;
+  border-color: #5b8cc0;
+}
+
+switch:checked slider {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  margin-left: 21px;
+}
+
+switch:hover {
+  background-color: #4a4a4a;
+  border-color: #666666;
+}
+
+switch:checked:hover {
+  background-color: #5b8cc0;
+  border-color: #6b9cc0;
+}
+
+switch:active {
+  background-color: #3a3a3a;
+}
+
+switch:checked:active {
+  background-color: #3b8cc0;
+}
+
+
+

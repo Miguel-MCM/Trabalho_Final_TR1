@@ -26,6 +26,7 @@ class ManchesterModulator(DigitalModulator):
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
         """
         Demodulate a Manchester signal back into a sequence of bits.
+        Uses energy-based detection by calculating the energy of each half-bit period.
         
         Parameters:
         signal (np.ndarray): Manchester signal to demodulate.
@@ -33,6 +34,28 @@ class ManchesterModulator(DigitalModulator):
         Returns:
         np.ndarray: Demodulated bits.
         """
-        bits = signal[self.samples_per_bit//4::self.samples_per_bit]
-        return np.where( bits - 0.5 < 0, 0, 1 ) .astype(int)
+        num_bits = len(signal) // self.samples_per_bit
+        demodulated_bits = np.zeros(num_bits, dtype=int)
+        
+        for i in range(num_bits):
+            start_idx = i * self.samples_per_bit
+            end_idx = start_idx + self.samples_per_bit
+            bit_period = signal[start_idx:end_idx]
+            
+            # Split the bit period into two halves
+            half_period = self.samples_per_bit // 2
+            first_half = bit_period[:half_period]
+            second_half = bit_period[half_period:]
+            
+            # Calculate energy of each half
+            energy_first = np.sum(first_half ** 2)
+            energy_second = np.sum(second_half ** 2)
+            
+            # For Manchester encoding:
+            # - Bit '0': low-high (0->1) pattern
+            # - Bit '1': high-low (1->0) pattern
+            # Compare energy of first half vs second half
+            demodulated_bits[i] = 1 if energy_first > energy_second else 0
+            
+        return demodulated_bits
         
