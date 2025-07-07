@@ -1,5 +1,5 @@
 from physical_layer import BipolarModulator, ManchesterModulator, NRZModulator, ASKCarrierModulator, FSKCarrierModulator, PSKCarrierModulator, QAMCarrierModulator
-from data_link_layer import ByteFlagFramer, BitsFlagFramer, CharCountingFramer, ParityErrorDetector, CRCErrorDetector
+from data_link_layer import ByteFlagFramer, BitsFlagFramer, CharCountingFramer, ParityErrorDetector, CRCErrorDetector, HummingErrorCorrector
 from communication import CommunicationChannel
 
 class BaseWindow:
@@ -8,6 +8,7 @@ class BaseWindow:
 
         self.coding = None
         self.error_detector = None
+        self.error_corrector = None
         self.modulator = NRZModulator(bit_rate=1000, sample_rate=10000)
         self.carrier_modulator = None
         self.use_carrier_modulation = False
@@ -40,6 +41,11 @@ class BaseWindow:
         self.error_detection_options = [None, ParityErrorDetector, CRCErrorDetector]
         self.error_detection_options_names = ["Nenhum", "Paridade", "CRC"]
         
+        # Configurações de correção de erro
+        self.error_correction_index = 0
+        self.error_correction_options = [None, HummingErrorCorrector]
+        self.error_correction_options_names = ["Nenhum", "Hamming"]
+        
         # Configurações de modulação
         self.modulation_index = 0
         self.modulation_options = [NRZModulator, BipolarModulator, ManchesterModulator]
@@ -70,6 +76,10 @@ class BaseWindow:
         def set_error_detection(x: int):
             self.error_detection_index = x
             self._update_error_detection()
+        
+        def set_error_correction(x: int):
+            self.error_correction_index = x
+            self._update_error_correction()
         
         def set_modulation(x: int):
             self.modulation_index = x
@@ -107,6 +117,7 @@ class BaseWindow:
         self.set_max_frame_size = set_max_frame_size
         self.set_coding = set_coding
         self.set_error_detection = set_error_detection
+        self.set_error_correction = set_error_correction
         self.set_modulation = set_modulation
         self.set_bit_rate = set_bit_rate
         self.set_sample_rate = set_sample_rate
@@ -137,6 +148,12 @@ class BaseWindow:
                 self.error_detector = None
             self._update_coding()
         
+        def update_error_correction():
+            if self.error_correction_options[self.error_correction_index] is not None:
+                self.error_corrector = self.error_correction_options[self.error_correction_index]()
+            else:
+                self.error_corrector = None
+        
         def update_modulator():
             self.modulator = self.modulation_options[self.modulation_index](
                 bit_rate=self.bit_rate, 
@@ -165,6 +182,7 @@ class BaseWindow:
         # Atribuir as funções como métodos da classe
         self._update_coding = update_coding
         self._update_error_detection = update_error_detection
+        self._update_error_correction = update_error_correction
         self._update_modulator = update_modulator
         self._update_carrier_modulator = update_carrier_modulator
 
@@ -175,6 +193,9 @@ class BaseWindow:
         
         # Configurar detector de erro
         self._update_error_detection()
+        
+        # Configurar corretor de erro
+        self._update_error_correction()
         
         # Configurar modulador
         self._update_modulator()

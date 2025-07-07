@@ -44,6 +44,7 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
             "sample_rate": self.set_sample_rate,
             "coding": self.set_coding,
             "error_detection": self.set_error_detection,
+            "error_correction": self.set_error_correction,
             "snr": self.set_snr,
             "use_carrier_modulation": self.set_use_carrier_modulation,
             "analog_modulation": self.set_analog_modulation,
@@ -55,6 +56,7 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
             (self.size[0] - 32, self.size[1] - 32),
             coding_options=self.coding_options_names,
             error_detection_options=self.error_detection_options_names,
+            error_correction_options=self.error_correction_options_names,
             modulation_options=self.modulation_options_names,
             analog_modulation_options=self.analog_modulation_options_names,
             set_variables=config_page_variables
@@ -98,26 +100,43 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         deframe_failed = False
         edc_failed = False
 
-        if self.coding is not None and self.error_detector is not None:
+         # Handle error detection and correction
+        if self.error_corrector is not None:
+            # Use Hamming error correction
             try:
-                bits_with_edc = self.coding.add_edc(bits)
-                self.link_page.set_edc_input(''.join(map(lambda x: str(int(x)), bits_with_edc)))
+                bits_with_error_correction = self.error_corrector.add_error_detection(bits)
+                self.link_page.set_edc_input(''.join(map(lambda x: str(int(x)), bits_with_error_correction)))
             except Exception as e:
-                bits_with_edc = bits
+                bits_with_error_correction = bits
                 self.link_page.set_edc_input(e.args[0])
         else:
-            bits_with_edc = bits
+            bits_with_error_correction = bits
             self.link_page.set_edc_input('Nenhum')
+        
+        if bits_with_error_correction.size % 8 != 0:
+            bits_with_error_correction = np.concatenate((bits_with_error_correction, np.zeros(8 - bits_with_error_correction.size % 8, dtype=int)))
 
+        if self.coding is not None and self.error_detector is not None:
+            # Use traditional error detection
+            try:
+                bits_with_edc = self.coding.add_edc(bits_with_error_correction)
+                self.link_page.set_edc_input(''.join(map(lambda x: str(int(x)), bits_with_edc)))
+            except Exception as e:
+                bits_with_edc = bits_with_error_correction
+                self.link_page.set_edc_input(e.args[0])
+        else:
+            bits_with_edc = bits_with_error_correction
+                    
+        # Handle framing
         if self.coding is not None:
             try:
-                framed_bits = self.coding.frame_data(bits)
+                framed_bits = self.coding.frame_data(bits_with_error_correction)
                 self.link_page.set_frame_input(''.join(map(lambda x: str(int(x)), framed_bits)))
             except Exception as e:
-                framed_bits = bits_with_edc
+                framed_bits = bits_with_error_correction
                 self.link_page.set_frame_input(e.args[0])
         else:
-            framed_bits = bits_with_edc
+            framed_bits = bits_with_error_correction
             self.link_page.set_frame_input('Nenhum')
 
         self.link_page.set_sent_bits_input(''.join(map(lambda x: str(int(x)), framed_bits)))
@@ -148,6 +167,7 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         decoded_bits = decoded_bits[: len(decoded_bits) // 8 * 8] # Remove 8-QAM padding
         self.link_page.set_received_bits_output(''.join(map(lambda x: str(int(x)), decoded_bits)))
 
+        # Handle deframing
         if self.coding is not None:
             try:
                 deframed_bits = self.coding.deframe_data(decoded_bits)
@@ -166,21 +186,49 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
             self.aplication_frame.update_output("Falha no desenquadramento")
             return
 
-        if self.coding is not None and self.error_detector is not None:
+        # Handle error detection and correction
+        if self.error_corrector is not None:
+            # Use Hamming error correction
+            no_trailer_bits = deframed_bits[:-self.error_detector.trailer_size] if self.error_detector is not None else deframed_bits
             try:
-                if (error := self.coding.check_edc(deframed_bits)):
-                    raise ValueError(error)
-                no_error_bits = self.coding.remove_edc(deframed_bits)
+                # Check for errors first
+                if self.error_corrector.check_errors(no_trailer_bits):
+                    # Correct errors
+                    corrected_bits = self.error_corrector.correct_errors(no_trailer_bits)
+                    no_error_bits = corrected_bits
+                else:
+                    # No errors, just remove error detection
+                    no_error_bits = no_trailer_bits
+                no_error_bits = np.concatenate((no_error_bits,  deframed_bits[-self.error_detector.trailer_size:])) if self.error_detector is not None else no_error_bits
                 self.link_page.set_edc_output(''.join(map(lambda x: str(int(x)), no_error_bits)))
             except Exception as e:
-                no_error_bits = deframed_bits
+                no_error_bits = no_trailer_bits
                 self.link_page.set_edc_output(e.args[0])
                 edc_failed = True
         else:
             no_error_bits = deframed_bits
             self.link_page.set_edc_output('Nenhum')
 
-        self.link_page.set_data_output(''.join(map(lambda x: str(int(x)), no_error_bits)))
+        if self.coding is not None and self.error_detector is not None:
+            try:
+                if (error := self.coding.check_edc(no_error_bits)):
+                    raise ValueError(error)
+                final_bits = self.coding.remove_edc(no_error_bits)
+                self.link_page.set_edc_output(''.join(map(lambda x: str(int(x)), final_bits)))
+            except Exception as e:
+                final_bits = no_error_bits
+                self.link_page.set_edc_output(e.args[0])
+                edc_failed = True
+        else:
+            final_bits = no_error_bits
+
+        if self.error_corrector is not None:
+            no_trailer_bits = final_bits[:-self.error_detector.trailer_size] if self.error_detector is not None else final_bits
+            no_error_detection_bits = self.error_corrector.remove_error_detection(no_trailer_bits)
+            final_bits = np.concatenate((no_error_detection_bits, final_bits[-self.error_detector.trailer_size:])) if self.error_detector is not None else no_error_detection_bits
+            self.link_page.set_edc_output(''.join(map(lambda x: str(int(x)), final_bits)))
+
+        self.link_page.set_data_output(''.join(map(lambda x: str(int(x)), final_bits)))
 
         if edc_failed:
             self.link_page.set_data_output('Falha no EDC')
@@ -190,7 +238,7 @@ class Window(BaseWindow, Gtk.ApplicationWindow):
         # Convert bits back to text for output
         try:
             # Convert bits to bytes
-            bit_string = ''.join(map(str, no_error_bits))
+            bit_string = ''.join(map(str, final_bits))
             # Pad to complete bytes if necessary
             if len(bit_string) % 8 != 0:
                 bit_string = bit_string.ljust(len(bit_string) + (8 - len(bit_string) % 8), '0')

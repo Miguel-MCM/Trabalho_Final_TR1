@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 class ConfigPage(Gtk.Box):
     def __init__(self, size:tuple[int, int], 
-    coding_options:list[str], error_detection_options:list[str], modulation_options:list[str], analog_modulation_options:list[str],
+    coding_options:list[str], error_detection_options:list[str], error_correction_options:list[str], modulation_options:list[str], analog_modulation_options:list[str],
     set_variables:dict[str, Callable[[str], None]] = {}):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.set_margin_start(size[0]//4)
@@ -78,11 +78,26 @@ class ConfigPage(Gtk.Box):
         self.error_detection_combo.set_hexpand(True)
         grid.attach(self.error_detection_combo, 1, 2, 1, 1)
 
+        # Error correction
+        error_correction_label = Gtk.Label(label="Correção de Erro:")
+        error_correction_label.set_hexpand(True)
+        error_correction_label.set_halign(Gtk.Align.START)
+        grid.attach(error_correction_label, 0, 3, 1, 1)
+        
+        self.error_correction_combo = Gtk.DropDown()
+        self.error_correction_combo.set_name("error_correction")
+        self.error_correction_combo.set_model(Gtk.StringList.new(error_correction_options))
+        self.error_correction_combo.set_selected(0)
+        self.error_correction_combo.connect_after('notify::selected', lambda *_: self.set_variable(self.error_correction_combo, self.error_correction_combo.get_selected))
+        self.error_correction_combo.set_show_arrow(True)
+        self.error_correction_combo.set_hexpand(True)
+        grid.attach(self.error_correction_combo, 1, 3, 1, 1)
+
         # SNR
         snr_label = Gtk.Label(label="SNR:")
         snr_label.set_hexpand(True)
         snr_label.set_halign(Gtk.Align.START)
-        grid.attach(snr_label, 0, 3, 1, 1)
+        grid.attach(snr_label, 0, 4, 1, 1)
         
         self.snr_entry = Gtk.Entry()
         self.snr_entry.set_name("snr")
@@ -90,7 +105,7 @@ class ConfigPage(Gtk.Box):
         id_set_v = self.snr_entry.connect_after('changed', lambda *_: self.set_variable(self.snr_entry, self.snr_entry.get_text))
         self.snr_entry.connect('changed', self.check_numeric_entry, [id_set_v], True)
         self.snr_entry.set_hexpand(True)
-        grid.attach(self.snr_entry, 1, 3, 1, 1)
+        grid.attach(self.snr_entry, 1, 4, 1, 1)
 
         # Digital Modulation Config
         dg_title = Gtk.Label(label="Configurações de Modulação Digital")
